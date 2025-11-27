@@ -1,0 +1,341 @@
+<div class="charges-container">
+  <div class="charges-header">
+    <h2>💰 Transaction Charges</h2>
+    <button class="btn-primary" (click)="showChargeForm.set(true)">
+      ➕ Post New Charge
+    </button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-value">${{ totalCharges().toFixed(2) }}</div>
+        <div class="stat-label">Total Charges</div>
+      </div>
+    </div>
+
+    <div class="stat-card pending">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <div class="stat-value">${{ pendingCharges().toFixed(2) }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="stat-card posted">
+      <div class="stat-icon">📋</div>
+      <div class="stat-content">
+        <div class="stat-value">${{ postedCharges().toFixed(2) }}</div>
+        <div class="stat-label">Posted</div>
+      </div>
+    </div>
+
+    <div class="stat-card paid">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <div class="stat-value">${{ paidCharges().toFixed(2) }}</div>
+        <div class="stat-label">Paid</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charge Form Modal -->
+  @if (showChargeForm()) {
+    <div class="modal-overlay" (click)="resetForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>💰 Post Transaction Charge</h3>
+          <button class="btn-close" (click)="resetForm()">✖</button>
+        </div>
+
+        <form class="charge-form">
+          <div class="form-group">
+            <label for="reservation">Reservation *</label>
+            <select 
+              id="reservation"
+              [(ngModel)]="selectedReservationId"
+              name="reservation"
+              required
+              class="form-control"
+            >
+              <option value="">Select Reservation</option>
+              @for (reservation of getActiveReservations(); track reservation.id) {
+                <option [value]="reservation.id">
+                  {{ reservation.id }} - {{ reservation.guestName }} - {{ reservation.roomType }}
+                </option>
+              }
+            </select>
+            @if (selectedReservationId()) {
+              <div class="reservation-details">
+                <div class="detail-row">
+                  <span>{{ getReservationDetails(selectedReservationId()) }}</span>
+                </div>
+                <div class="detail-row charges-summary">
+                  <span>Current Charges: ${{ getTotalChargesForReservation(selectedReservationId()).toFixed(2) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="chargeType">Charge Type *</label>
+            <select
+              id="chargeType"
+              [(ngModel)]="chargeType"
+              name="chargeType"
+              required
+              class="form-control"
+            >
+              <option value="room-service">🍽️ Room Service</option>
+              <option value="minibar">🍷 Minibar</option>
+              <option value="laundry">👔 Laundry</option>
+              <option value="spa">💆 Spa</option>
+              <option value="restaurant">🍴 Restaurant</option>
+              <option value="telephone">📞 Telephone</option>
+              <option value="parking">🚗 Parking</option>
+              <option value="other">📝 Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description *</label>
+            <input
+              type="text"
+              id="description"
+              [(ngModel)]="description"
+              name="description"
+              required
+              class="form-control"
+              placeholder="Enter charge description"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="amount">Unit Price *</label>
+              <input
+                #amountInput
+                type="number"
+                id="amount"
+                [(ngModel)]="amount"
+                name="amount"
+                min="0"
+                step="0.01"
+                required
+                class="form-control"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="quantity">Quantity *</label>
+              <input
+                type="number"
+                id="quantity"
+                [(ngModel)]="quantity"
+                name="quantity"
+                min="1"
+                required
+                class="form-control"
+                placeholder="1"
+              />
+            </div>
+          </div>
+
+          <div class="total-display">
+            <span class="total-label">Total Amount:</span>
+            <span class="total-value">{{ calculateTotal() | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea
+              id="notes"
+              [(ngModel)]="notes"
+              name="notes"
+              rows="3"
+              class="form-control"
+              placeholder="Add any additional notes..."
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="resetForm()">
+              Cancel
+            </button>
+            <button type="button" class="btn-primary" (click)="postCharge()">
+              💰 Post Charge
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="🔍 Search by ID, guest name, reservation, or description..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-controls">
+      <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="posted">Posted</option>
+        <option value="paid">Paid</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+
+      <select [(ngModel)]="filterType" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="all">All Types</option>
+        <option value="room-service">Room Service</option>
+        <option value="minibar">Minibar</option>
+        <option value="laundry">Laundry</option>
+        <option value="spa">Spa</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="telephone">Telephone</option>
+        <option value="parking">Parking</option>
+        <option value="other">Other</option>
+      </select>
+
+      <button class="btn-export" (click)="exportCharges()">
+        📥 Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Charges List -->
+  <div class="charges-list">
+    <div class="results-count">
+      Found {{ getFilteredCharges().length }} charge(s)
+    </div>
+
+    @if (getFilteredCharges().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">💰</div>
+        <h3>No Charges Found</h3>
+        <p>Start by posting a transaction charge to a reservation.</p>
+        <button class="btn-primary" (click)="showChargeForm.set(true)">
+          ➕ Post Charge
+        </button>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="charges-table">
+          <thead>
+            <tr>
+              <th>Charge ID</th>
+              <th>Date & Time</th>
+              <th>Guest Name</th>
+              <th>Reservation</th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Unit Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Posted By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (charge of getFilteredCharges(); track charge.id) {
+              <tr>
+                <td class="charge-id">{{ charge.id }}</td>
+                <td>
+                  <div class="date-time">
+                    <div>{{ charge.chargeDate }}</div>
+                    <div class="time">{{ charge.chargeTime }}</div>
+                  </div>
+                </td>
+                <td class="guest-name">{{ charge.guestName }}</td>
+                <td>
+                  <div class="reservation-info">
+                    <div class="res-id">{{ charge.reservationId }}</div>
+                    <div class="res-details">{{ getReservationDetails(charge.reservationId) }}</div>
+                  </div>
+                </td>
+                <td>
+                  <span class="type-badge" [class]="charge.chargeType">
+                    {{ getChargeTypeLabel(charge.chargeType) }}
+                  </span>
+                </td>
+                <td class="description">{{ charge.description }}</td>
+                <td class="amount">${{ charge.amount.toFixed(2) }}</td>
+                <td class="quantity">{{ charge.quantity }}</td>
+                <td class="total-amount">${{ charge.totalAmount.toFixed(2) }}</td>
+                <td>
+                  <span class="status-badge" [class]="charge.status">
+                    {{ charge.status }}
+                  </span>
+                </td>
+                <td>{{ charge.postedBy }}</td>
+                <td>
+                  <div class="action-buttons">
+                    @if (charge.status === 'posted') {
+                      <button 
+                        class="btn-icon btn-paid" 
+                        (click)="updateChargeStatus(charge, 'paid')"
+                        title="Mark as Paid"
+                      >
+                        ✅
+                      </button>
+                    }
+                    @if (charge.status === 'pending' || charge.status === 'posted') {
+                      <button 
+                        class="btn-icon btn-cancel" 
+                        (click)="updateChargeStatus(charge, 'cancelled')"
+                        title="Cancel Charge"
+                      >
+                        ❌
+                      </button>
+                    }
+                    <button 
+                      class="btn-icon btn-delete" 
+                      (click)="deleteCharge(charge)"
+                      title="Delete Charge"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              @if (charge.notes) {
+                <tr class="notes-row">
+                  <td colspan="12">
+                    <div class="charge-notes">
+                      <strong>Notes:</strong> {{ charge.notes }}
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

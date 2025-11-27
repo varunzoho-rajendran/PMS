@@ -1,0 +1,417 @@
+.folio-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.folio-header {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.folio-header h2 {
+  color: #333;
+  margin: 0;
+  font-size: 1.75rem;
+  text-align: center;
+}
+
+/* Selector Section */
+.selector-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.selector-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+}
+
+.search-input,
+.form-control {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.search-input:focus,
+.form-control:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* Info Cards */
+.info-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.info-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2196f3;
+  font-size: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.info-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.info-item {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.info-item .label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.info-item .value {
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.folio-number {
+  font-weight: 700;
+  color: #2196f3;
+  font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-badge.confirmed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.checked-in {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge.checked-out {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+/* Transactions Section */
+.transactions-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-export,
+.btn-print {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-export {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+}
+
+.btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-print {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+.btn-print:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+}
+
+.folio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.folio-table thead th {
+  background: #2196f3;
+  color: white;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.95rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.folio-table tbody td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.folio-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.folio-table tbody tr.room {
+  background: #e3f2fd;
+  font-weight: 600;
+}
+
+.folio-table tbody tr.charge {
+  background: #fff3e0;
+}
+
+.folio-table tbody tr.payment {
+  background: #e8f5e9;
+}
+
+.date-col {
+  width: 12%;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.description-col {
+  width: 45%;
+  font-size: 0.95rem;
+}
+
+.trans-icon {
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.amount-col {
+  width: 14%;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.amount-col.charges {
+  color: #f57c00;
+}
+
+.amount-col.payments {
+  color: #4caf50;
+}
+
+.amount-col.balance {
+  color: #2196f3;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Summary Section */
+.folio-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  color: white;
+}
+
+.summary-content {
+  max-width: 600px;
+  margin-left: auto;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  font-size: 1.1rem;
+}
+
+.summary-label {
+  font-weight: 600;
+}
+
+.summary-value {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.charges-value {
+  color: #ffeb3b;
+}
+
+.payments-value {
+  color: #a5d6a7;
+}
+
+.summary-divider {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 1rem 0;
+}
+
+.total-row {
+  padding: 1.5rem 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.total-value {
+  font-size: 2rem;
+  color: white;
+}
+
+.total-value.positive {
+  color: #ff5252;
+}
+
+.total-value.negative {
+  color: #69f0ae;
+}
+
+.credit-note {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .info-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .selector-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .folio-container {
+    padding: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-export,
+  .btn-print {
+    width: 100%;
+  }
+
+  .info-item {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .summary-content {
+    max-width: 100%;
+  }
+
+  .folio-table {
+    font-size: 0.85rem;
+  }
+
+  .folio-table thead th,
+  .folio-table tbody td {
+    padding: 0.75rem 0.5rem;
+  }
+}

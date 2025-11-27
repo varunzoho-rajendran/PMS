@@ -1,0 +1,189 @@
+<div class="folio-container">
+  <div class="folio-header">
+    <h2>📋 Guest Folio Statement</h2>
+  </div>
+
+  <!-- Reservation Selector -->
+  <div class="selector-section">
+    <div class="form-group">
+      <label for="reservation">Select Reservation to View Folio</label>
+      <div class="selector-row">
+        <input
+          #guestSearch
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="🔍 Search by ID, guest name, or email..."
+          class="search-input"
+        />
+        <select
+          id="reservation"
+          [(ngModel)]="selectedReservationId"
+          (change)="onReservationSelect()"
+          class="form-control"
+        >
+          <option value="">-- Select Reservation --</option>
+          @for (reservation of getFilteredReservations(); track reservation.id) {
+            <option [value]="reservation.id">
+              {{ reservation.id }} - {{ reservation.guestName }} - {{ reservation.roomType }} ({{ reservation.status }})
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folio Details -->
+  @if (showFolioDetails() && selectedReservation()) {
+    <div #folioStatement class="folio-details">
+      <!-- Guest and Reservation Info -->
+      <div class="info-cards">
+        <div class="info-card guest-card">
+          <h3>👤 Guest Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Name:</span>
+              <span class="value">{{ selectedReservation()!.guestName }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Email:</span>
+              <span class="value">{{ selectedReservation()!.email }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Phone:</span>
+              <span class="value">{{ selectedReservation()!.phone }}</span>
+            </div>
+            @if (selectedGuest()) {
+              <div class="info-item">
+                <span class="label">Address:</span>
+                <span class="value">{{ selectedGuest()!.address }}, {{ selectedGuest()!.city }}, {{ selectedGuest()!.state }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="info-card reservation-card">
+          <h3>🏨 Reservation Details</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Folio Number:</span>
+              <span class="value folio-number">{{ selectedReservation()!.id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Room Type:</span>
+              <span class="value">{{ selectedReservation()!.roomType }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Check-In Date:</span>
+              <span class="value">{{ selectedReservation()!.checkInDate }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Check-Out Date:</span>
+              <span class="value">{{ selectedReservation()!.checkOutDate }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Number of Guests:</span>
+              <span class="value">{{ selectedReservation()!.numberOfGuests }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Status:</span>
+              <span class="value status-badge" [class]="selectedReservation()!.status">
+                {{ selectedReservation()!.status | uppercase }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction Table -->
+      <div class="transactions-section">
+        <div class="section-header">
+          <h3>📊 Transaction Details</h3>
+          <div class="action-buttons">
+            <button class="btn-export" (click)="exportCSV()">📥 Export CSV</button>
+            <button class="btn-print" (click)="printFolio()">🖨️ Print Folio</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="folio-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Charges</th>
+                <th>Payments</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transaction of folioTransactions(); track transaction.id) {
+                <tr [class]="transaction.type">
+                  <td class="date-col">{{ transaction.date }}</td>
+                  <td class="description-col">
+                    <span class="trans-icon">
+                      @if (transaction.type === 'room') { 🏨 }
+                      @else if (transaction.type === 'charge') { 💰 }
+                      @else if (transaction.type === 'payment') { 💳 }
+                    </span>
+                    {{ transaction.description }}
+                  </td>
+                  <td class="amount-col charges">
+                    @if (transaction.charges > 0) {
+                      {{ transaction.charges | currency:'USD':'symbol':'1.2-2' }}
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td class="amount-col payments">
+                    @if (transaction.payments > 0) {
+                      {{ transaction.payments | currency:'USD':'symbol':'1.2-2' }}
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td class="amount-col balance">
+                    {{ transaction.balance | currency:'USD':'symbol':'1.2-2' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="folio-summary">
+          <div class="summary-content">
+            <div class="summary-row">
+              <span class="summary-label">Total Room & Charges:</span>
+              <span class="summary-value charges-value">{{ totalCharges() | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Total Payments:</span>
+              <span class="summary-value payments-value">{{ totalPayments() | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row total-row">
+              <span class="summary-label">AMOUNT DUE:</span>
+              <span class="summary-value total-value" [class.negative]="balanceDue() < 0" [class.positive]="balanceDue() > 0">
+                {{ balanceDue() | currency:'USD':'symbol':'1.2-2' }}
+              </span>
+            </div>
+            @if (balanceDue() < 0) {
+              <div class="credit-note">
+                💡 Negative balance indicates a credit in guest's favor
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!showFolioDetails()) {
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>No Folio Selected</h3>
+      <p>Select a reservation from the dropdown above to view the guest folio statement.</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,307 @@
+<div class="list-container">
+  <div class="list-header">
+    <h2>Management Dashboard</h2>
+    <button class="btn-add-customer" (click)="openCustomerPopup()">
+      ➕ Add Customer
+    </button>
+  </div>
+
+  <!-- Analytics Section with Charts -->
+  <div class="analytics-section">
+    <h3>📊 Analytics Overview</h3>
+    
+    <!-- Key Metrics Cards -->
+    <div class="analytics-grid">
+      <div class="analytics-card primary">
+        <div class="card-icon">🏨</div>
+        <div class="card-content">
+          <div class="card-value">{{ totalReservations() }}</div>
+          <div class="card-label">Total Reservations</div>
+        </div>
+      </div>
+
+      <div class="analytics-card success">
+        <div class="card-icon">👥</div>
+        <div class="card-content">
+          <div class="card-value">{{ totalGuests() }}</div>
+          <div class="card-label">Total Guests</div>
+        </div>
+      </div>
+
+      <div class="analytics-card info">
+        <div class="card-icon">📥</div>
+        <div class="card-content">
+          <div class="card-value">{{ todayCheckIns() }}</div>
+          <div class="card-label">Today's Check-Ins</div>
+        </div>
+      </div>
+
+      <div class="analytics-card warning">
+        <div class="card-icon">📤</div>
+        <div class="card-content">
+          <div class="card-value">{{ todayCheckOuts() }}</div>
+          <div class="card-label">Today's Check-Outs</div>
+        </div>
+      </div>
+
+      <div class="analytics-card revenue">
+        <div class="card-icon">💰</div>
+        <div class="card-content">
+          <div class="card-value">{{ totalRevenue() | currency:'USD':'symbol':'1.2-2' }}</div>
+          <div class="card-label">Total Revenue</div>
+        </div>
+      </div>
+
+      <div class="analytics-card occupancy">
+        <div class="card-icon">📊</div>
+        <div class="card-content">
+          <div class="card-value">{{ occupancyRate() | number:'1.1-1' }}%</div>
+          <div class="card-label">Occupancy Rate</div>
+          <div class="mini-progress">
+            <div class="progress-fill" [style.width.%]="occupancyRate()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="analytics-card confirmed">
+        <div class="card-icon">✅</div>
+        <div class="card-content">
+          <div class="card-value">{{ confirmedReservations() }}</div>
+          <div class="card-label">Confirmed</div>
+        </div>
+      </div>
+
+      <div class="analytics-card pending">
+        <div class="card-icon">⏳</div>
+        <div class="card-content">
+          <div class="card-value">{{ pendingReservations() }}</div>
+          <div class="card-label">Pending</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-container">
+      <!-- Reservation Status Pie Chart -->
+      <div class="chart-card">
+        <h4>📊 Reservation Status Distribution</h4>
+        <div class="pie-chart-container">
+          <div class="pie-chart" 
+               [style.--confirmed-pct]="getStatusPercentage('confirmed')"
+               [style.--pending-pct]="getStatusPercentage('pending')"
+               [style.--checked-in-pct]="getStatusPercentage('checked-in')"
+               [style.--checked-out-pct]="getStatusPercentage('checked-out')"
+               [style.--cancelled-pct]="getStatusPercentage('cancelled')">
+            <div class="pie-center">
+              <div class="pie-total">{{ totalReservations() }}</div>
+              <div class="pie-label">Total</div>
+            </div>
+          </div>
+          <div class="pie-legend">
+            <div class="legend-item">
+              <span class="legend-color confirmed"></span>
+              <span class="legend-text">Confirmed ({{ getStatusCount('confirmed') }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color pending"></span>
+              <span class="legend-text">Pending ({{ getStatusCount('pending') }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color checked-in"></span>
+              <span class="legend-text">Checked-In ({{ getStatusCount('checked-in') }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color checked-out"></span>
+              <span class="legend-text">Checked-Out ({{ getStatusCount('checked-out') }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color cancelled"></span>
+              <span class="legend-text">Cancelled ({{ getStatusCount('cancelled') }})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Bar Chart -->
+      <div class="chart-card">
+        <h4>💰 Revenue by Status</h4>
+        <div class="bar-chart">
+          <div class="bar-item">
+            <div class="bar-label">Confirmed</div>
+            <div class="bar-container">
+              <div class="bar-fill confirmed" 
+                   [style.width.%]="getRevenuePercentage('confirmed')"
+                   [attr.data-value]="(getRevenueByStatus('confirmed') | currency:'USD':'symbol':'1.2-2')">
+              </div>
+            </div>
+            <div class="bar-value">{{ getRevenueByStatus('confirmed') | currency:'USD':'symbol':'1.2-2' }}</div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label">Checked-In</div>
+            <div class="bar-container">
+              <div class="bar-fill checked-in" 
+                   [style.width.%]="getRevenuePercentage('checked-in')"
+                   [attr.data-value]="(getRevenueByStatus('checked-in') | currency:'USD':'symbol':'1.2-2')">
+              </div>
+            </div>
+            <div class="bar-value">{{ getRevenueByStatus('checked-in') | currency:'USD':'symbol':'1.2-2' }}</div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label">Checked-Out</div>
+            <div class="bar-container">
+              <div class="bar-fill checked-out" 
+                   [style.width.%]="getRevenuePercentage('checked-out')"
+                   [attr.data-value]="(getRevenueByStatus('checked-out') | currency:'USD':'symbol':'1.2-2')">
+              </div>
+            </div>
+            <div class="bar-value">{{ getRevenueByStatus('checked-out') | currency:'USD':'symbol':'1.2-2' }}</div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label">Pending</div>
+            <div class="bar-container">
+              <div class="bar-fill pending" 
+                   [style.width.%]="getRevenuePercentage('pending')"
+                   [attr.data-value]="(getRevenueByStatus('pending') | currency:'USD':'symbol':'1.2-2')">
+              </div>
+            </div>
+            <div class="bar-value">{{ getRevenueByStatus('pending') | currency:'USD':'symbol':'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservations List -->
+  <div class="reservations-list-section">
+    <div class="section-header">
+      <h3>📋 Reservation List</h3>
+      <div class="export-buttons">
+        <button class="btn-export csv" (click)="downloadCSV()">
+          📊 Download CSV
+        </button>
+        <button class="btn-export pdf" (click)="downloadPDF()">
+          📄 Print/PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <div class="search-box">
+        <input 
+          #searchInput
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="🔍 Search by name, email, phone, or ID..."
+          class="search-input"
+        />
+      </div>
+      <div class="filter-box">
+        <select [(ngModel)]="filterStatus" class="filter-select">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="checked-in">Checked In</option>
+          <option value="checked-out">Checked Out</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="results-info">
+      <span class="results-count">{{ getFilteredReservations().length }} reservations found</span>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      @if (getFilteredReservations().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>No reservations found matching the filters</p>
+        </div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Guest Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Check-In</th>
+              <th>Check-Out</th>
+              <th>Room Type</th>
+              <th>Guests</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reservation of getFilteredReservations(); track reservation.id) {
+              <tr #reservationRow>
+                <td>
+                  <a [routerLink]="['/reservation']" [queryParams]="{reservationId: reservation.id}" class="id-link">
+                    <span class="id-badge">{{ reservation.id }}</span>
+                  </a>
+                </td>
+                <td><strong>{{ reservation.guestName }}</strong></td>
+                <td>{{ reservation.email }}</td>
+                <td>{{ reservation.phone }}</td>
+                <td>{{ reservation.checkInDate }}</td>
+                <td>{{ reservation.checkOutDate }}</td>
+                <td><span class="room-badge">{{ reservation.roomType }}</span></td>
+                <td class="text-center">{{ reservation.numberOfGuests }}</td>
+                <td class="price-cell"><strong>{{ (reservation.price || 0) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                <td>
+                  <span [class]="'status-badge ' + reservation.status">
+                    {{ reservation.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-action view" (click)="viewReservation(reservation)" title="View Details">
+                      👁️
+                    </button>
+                    <button class="btn-action edit" (click)="editReservation(reservation)" title="Edit">
+                      ✏️
+                    </button>
+                    <button class="btn-action status" (click)="changeStatus(reservation)" title="Change Status">
+                      🔄
+                    </button>
+                    <button class="btn-action folio" [routerLink]="['/folio', reservation.id]" title="View Folio Statement">
+                      📋
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Customer Popup Modal -->
+<app-customer-popup
+  [isOpen]="isCustomerPopupOpen"
+  [editCustomer]="editingCustomer()"
+  (closePopup)="closeCustomerPopup()"
+  (customerSaved)="onCustomerSaved($event)"
+></app-customer-popup>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

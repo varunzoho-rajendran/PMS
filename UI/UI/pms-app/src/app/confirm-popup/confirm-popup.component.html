@@ -1,0 +1,23 @@
+@if (isOpen()) {
+  <div class="confirm-overlay" (click)="handleOverlayClick($event)">
+    <div class="confirm-container">
+      <button class="btn-close" (click)="cancel()">✕</button>
+      
+      <div class="confirm-icon">⚠️</div>
+      
+      <div class="confirm-content">
+        <h2>{{ message?.title || 'Confirm Action' }}</h2>
+        <p>{{ message?.message || 'Are you sure you want to continue?' }}</p>
+      </div>
+      
+      <div class="confirm-footer">
+        <button class="btn-secondary" (click)="cancel()">
+          {{ message?.cancelText || 'Cancel' }}
+        </button>
+        <button class="btn-primary" (click)="confirm()">
+          {{ message?.confirmText || 'Confirm' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

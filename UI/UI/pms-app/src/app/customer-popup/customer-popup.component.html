@@ -1,0 +1,256 @@
+@if (isOpen()) {
+  <div class="modal-overlay" (click)="handleOverlayClick($event)">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>{{ editCustomer ? 'Edit Customer' : 'Add New Customer' }}</h2>
+        <button class="btn-close" (click)="close()" type="button">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (errorMessage) {
+          <div class="error-message">
+            {{ errorMessage }}
+          </div>
+        }
+
+        @if (submitted()) {
+          <div class="success-message">
+            ✓ Customer {{ editCustomer ? 'updated' : 'saved' }} successfully!
+          </div>
+        }
+
+        <form #customerForm="ngForm" (ngSubmit)="saveCustomer()">
+          <div class="form-grid">
+            <!-- Personal Information -->
+            <div class="form-section">
+              <h3>Personal Information</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="firstName">First Name *</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    [ngModel]="customer().firstName"
+                    (ngModelChange)="updateField('firstName', $event)"
+                    name="firstName"
+                    required
+                    placeholder="Enter first name"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="lastName">Last Name *</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    [(ngModel)]="customer().lastName"
+                    (ngModelChange)="updateField('lastName', $event)"
+                    name="lastName"
+                    required
+                    placeholder="Enter last name"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    [(ngModel)]="customer().email"
+                    (ngModelChange)="updateField('email', $event)"
+                    name="email"
+                    required
+                    placeholder="customer@example.com"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone">Phone *</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    [(ngModel)]="customer().phone"
+                    (ngModelChange)="updateField('phone', $event)"
+                    name="phone"
+                    required
+                    placeholder="+1 234 567 8900"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="dateOfBirth">Date of Birth</label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    [(ngModel)]="customer().dateOfBirth"
+                    (ngModelChange)="updateField('dateOfBirth', $event)"
+                    name="dateOfBirth"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="nationality">Nationality</label>
+                  <input
+                    type="text"
+                    id="nationality"
+                    [(ngModel)]="customer().nationality"
+                    (ngModelChange)="updateField('nationality', $event)"
+                    name="nationality"
+                    placeholder="Enter nationality"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="form-section">
+              <h3>Address Information</h3>
+              
+              <div class="form-group">
+                <label for="address">Street Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  [(ngModel)]="customer().address"
+                  (ngModelChange)="updateField('address', $event)"
+                  name="address"
+                  placeholder="123 Main Street"
+                />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="city">City</label>
+                  <input
+                    type="text"
+                    id="city"
+                    [(ngModel)]="customer().city"
+                    (ngModelChange)="updateField('city', $event)"
+                    name="city"
+                    placeholder="City"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="state">State/Province</label>
+                  <input
+                    type="text"
+                    id="state"
+                    [(ngModel)]="customer().state"
+                    (ngModelChange)="updateField('state', $event)"
+                    name="state"
+                    placeholder="State"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="zipCode">ZIP/Postal Code</label>
+                  <input
+                    type="text"
+                    id="zipCode"
+                    [(ngModel)]="customer().zipCode"
+                    (ngModelChange)="updateField('zipCode', $event)"
+                    name="zipCode"
+                    placeholder="12345"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="country">Country</label>
+                  <input
+                    type="text"
+                    id="country"
+                    [(ngModel)]="customer().country"
+                    (ngModelChange)="updateField('country', $event)"
+                    name="country"
+                    placeholder="Country"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ID Information -->
+            <div class="form-section">
+              <h3>Identification</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="idType">ID Type</label>
+                  <select
+                    id="idType"
+                    [(ngModel)]="customer().idType"
+                    (ngModelChange)="updateField('idType', $event)"
+                    name="idType"
+                  >
+                    @for (type of idTypes; track type) {
+                      <option [value]="type.toLowerCase().replace(' ', '-')">{{ type }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="idNumber">ID Number</label>
+                  <input
+                    type="text"
+                    id="idNumber"
+                    [(ngModel)]="customer().idNumber"
+                    (ngModelChange)="updateField('idNumber', $event)"
+                    name="idNumber"
+                    placeholder="Enter ID number"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="form-section">
+              <h3>Emergency Contact</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="emergencyContactName">Contact Name</label>
+                  <input
+                    type="text"
+                    id="emergencyContactName"
+                    [(ngModel)]="customer().emergencyContactName"
+                    (ngModelChange)="updateField('emergencyContactName', $event)"
+                    name="emergencyContactName"
+                    placeholder="Emergency contact name"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="emergencyContactPhone">Contact Phone</label>
+                  <input
+                    type="tel"
+                    id="emergencyContactPhone"
+                    [(ngModel)]="customer().emergencyContactPhone"
+                    (ngModelChange)="updateField('emergencyContactPhone', $event)"
+                    name="emergencyContactPhone"
+                    placeholder="Emergency contact phone"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="close()">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="!customerForm.valid">
+              {{ editCustomer ? 'Update Customer' : 'Save Customer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,22 @@
+@if (isOpen()) {
+  <div class="error-overlay" (click)="handleOverlayClick($event)">
+    <div class="error-container" [class]="error?.type">
+      <button class="btn-close" (click)="close()" type="button">✕</button>
+      
+      <div class="error-icon" [style.color]="getIconColor()">
+        {{ getIcon() }}
+      </div>
+
+      <div class="error-content">
+        <h2 class="error-title">{{ error?.title || 'Notification' }}</h2>
+        <p class="error-message">{{ error?.message || 'An error occurred.' }}</p>
+      </div>
+
+      <div class="error-footer">
+        <button class="btn-primary" (click)="close()">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+}

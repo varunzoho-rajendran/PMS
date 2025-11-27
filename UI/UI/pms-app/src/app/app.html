@@ -1,0 +1,139 @@
+<div class="app-container">
+  @if (authService.isAuthenticated()) {
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>{{ i18n.t('login.title') }}</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a routerLink="/list" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('dashboard') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.dashboard') }}</span>
+        </a>
+        
+        <a 
+          [routerLink]="authService.hasAccess('guests') ? '/guest' : null" 
+          [class.disabled]="!authService.hasAccess('guests')"
+          [attr.title]="!authService.hasAccess('guests') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('guest') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.guest') }}</span>
+        </a>
+        
+        <a 
+          [routerLink]="authService.hasAccess('reservations') ? '/reservation' : null" 
+          [class.disabled]="!authService.hasAccess('reservations')"
+          [attr.title]="!authService.hasAccess('reservations') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('reservation') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.reservation') }}</span>
+        </a>
+        
+        <!-- Folio Section with Submenu -->
+        <div class="nav-group" [class.disabled]="!authService.hasAccess('billing')">
+          <div class="nav-group-title">
+            <span class="nav-icon">{{ i18n.icon('folio') }}</span>
+            <span class="nav-text">{{ i18n.t('navigation.folio') }}</span>
+          </div>
+          @if (authService.hasAccess('billing')) {
+            <div class="nav-submenu">
+              <a routerLink="/folio" routerLinkActive="active" class="nav-subitem">
+                <span class="nav-icon">{{ i18n.icon('folio') }}</span>
+                <span class="nav-text">{{ i18n.t('navigation.folioStatement') }}</span>
+              </a>
+              <a routerLink="/folio/charges" routerLinkActive="active" class="nav-subitem">
+                <span class="nav-icon">{{ i18n.icon('charges') }}</span>
+                <span class="nav-text">{{ i18n.t('navigation.charges') }}</span>
+              </a>
+              <a routerLink="/folio/payments" routerLinkActive="active" class="nav-subitem">
+                <span class="nav-icon">{{ i18n.icon('payments') }}</span>
+                <span class="nav-text">{{ i18n.t('navigation.payments') }}</span>
+              </a>
+            </div>
+          }
+        </div>
+
+        <a 
+          [routerLink]="authService.hasAccess('reports') ? '/reports' : null" 
+          [class.disabled]="!authService.hasAccess('reports')"
+          [attr.title]="!authService.hasAccess('reports') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('reports') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.reports') }}</span>
+        </a>
+        
+        <a 
+          [routerLink]="authService.hasAccess('property') ? '/property' : null" 
+          [class.disabled]="!authService.hasAccess('property')"
+          [attr.title]="!authService.hasAccess('property') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('property') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.property') }}</span>
+        </a>
+        
+        <a 
+          [routerLink]="authService.hasAccess('users') ? '/users' : null" 
+          [class.disabled]="!authService.hasAccess('users')"
+          [attr.title]="!authService.hasAccess('users') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">{{ i18n.icon('users') }}</span>
+          <span class="nav-text">{{ i18n.t('navigation.users') }}</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="app-header">
+        <div class="header-left">
+          <div class="datetime-weather-widget">
+            <div class="datetime-section">
+              <div class="date-display">📅 {{ currentDate() }}</div>
+              <div class="time-display">🕐 {{ currentTime() }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="header-right">
+        <div class="header-info-card">
+          @if (propertyInfo()) {
+            <div class="property-section">
+              <div class="property-name">🏢 {{ propertyInfo()!.name }}</div>
+              <div class="property-details">
+                <span class="property-type">{{ propertyInfo()!.type }}</span>
+                <span class="property-rating">{{ '⭐'.repeat(propertyInfo()!.starRating) }}</span>
+              </div>
+              <div class="property-location">
+                📍 {{ propertyInfo()!.city }}, {{ propertyInfo()!.state }}
+              </div>
+            </div>
+            <div class="divider"></div>
+          }
+          
+          <div class="user-section">
+            <div class="user-name">{{ i18n.icon('guest') }} {{ authService.getCurrentUser()?.firstName }} {{ authService.getCurrentUser()?.lastName }}</div>
+            <div class="user-role">{{ authService.getCurrentUser()?.role }}</div>
+            @if (!propertyInfo()) {
+              <a routerLink="/property" class="setup-link">{{ i18n.icon('property') }} {{ i18n.t('property.setupProperty') }}</a>
+            }
+            <button class="btn-logout" (click)="logout()">{{ i18n.icon('logout') }} {{ i18n.t('common.logout') }}</button>
+          </div>
+        </div>
+      </div>
+    </header>
+      
+    <main class="app-content">
+      <router-outlet />
+    </main>
+  </div>
+  } @else {
+    <!-- Login Page when not authenticated -->
+    <router-outlet />
+  }
+</div>

@@ -1,0 +1,252 @@
+/* Error Overlay */
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Error Container */
+.error-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  animation: slideUp 0.3s ease, shake 0.5s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Type-specific border colors */
+.error-container.error {
+  border-top: 6px solid #dc3545;
+}
+
+.error-container.warning {
+  border-top: 6px solid #f59e0b;
+}
+
+.error-container.info {
+  border-top: 6px solid #17a2b8;
+}
+
+.error-container.success {
+  border-top: 6px solid #28a745;
+}
+
+/* Close Button */
+.btn-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  padding: 0;
+  line-height: 1;
+  z-index: 1;
+}
+
+.btn-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: rotate(90deg);
+  color: #333;
+}
+
+/* Error Icon */
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  padding: 2rem 2rem 1rem;
+  animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Error Content */
+.error-content {
+  padding: 0 2rem 2rem;
+  text-align: center;
+}
+
+.error-title {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.error-message {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Error Footer */
+.error-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 2rem 2rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 3rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 120px;
+}
+
+.btn-primary:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Type-specific button colors */
+.error-container.error .btn-primary {
+  background: #dc3545;
+}
+
+.error-container.error .btn-primary:hover {
+  background: #c82333;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.error-container.warning .btn-primary {
+  background: #f59e0b;
+}
+
+.error-container.warning .btn-primary:hover {
+  background: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.error-container.info .btn-primary {
+  background: #17a2b8;
+}
+
+.error-container.info .btn-primary:hover {
+  background: #138496;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.error-container.success .btn-primary {
+  background: #28a745;
+}
+
+.error-container.success .btn-primary:hover {
+  background: #218838;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .error-container {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+
+  .error-icon {
+    font-size: 3rem;
+    padding: 1.5rem 1rem 0.5rem;
+  }
+
+  .error-title {
+    font-size: 1.25rem;
+  }
+
+  .error-message {
+    font-size: 0.9rem;
+  }
+
+  .error-content {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .error-footer {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .error-overlay,
+  .error-container {
+    animation: none;
+  }
+  
+  .error-icon {
+    animation: none;
+  }
+}

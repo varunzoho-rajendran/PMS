@@ -1,0 +1,381 @@
+<div class="users-container">
+  <div class="users-header">
+    <h2>User Management</h2>
+    <button (click)="showAddUser()" class="btn-add">
+      ➕ Add New User
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input 
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Search by username, email, or name..."
+        class="search-input"
+      />
+    </div>
+    <div class="filter-box">
+      <select [(ngModel)]="filterRole" class="filter-select">
+        <option value="all">All Roles</option>
+        <option value="admin">Administrator</option>
+        <option value="manager">Manager</option>
+        <option value="receptionist">Receptionist</option>
+        <option value="staff">Staff</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Users List -->
+  <div class="content-area">
+    <div class="users-list">
+      <div class="results-count">
+        Found {{ getFilteredUsers().length }} user(s)
+      </div>
+
+      @if (getFilteredUsers().length === 0) {
+        <div class="empty-state">
+          <p>No users found</p>
+          <button (click)="showAddUser()" class="btn-primary">Add First User</button>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of getFilteredUsers(); track user.id) {
+                <tr #userCard [class.selected]="selectedUser()?.id === user.id">
+                  <td>
+                    <strong>{{ user.username }}</strong>
+                  </td>
+                  <td>{{ user.firstName }} {{ user.lastName }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>
+                    <span [class]="'role-badge ' + getRoleBadgeClass(user.role)">
+                      {{ user.role }}
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="'status-badge ' + getStatusClass(user.status)">
+                      {{ user.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button 
+                        (click)="viewUserDetails(user)"
+                        class="btn-view"
+                        title="View Details"
+                      >
+                        👁️
+                      </button>
+                      <button 
+                        (click)="editUser(user)"
+                        class="btn-edit"
+                        title="Edit User"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        (click)="deleteUser(user.id)"
+                        class="btn-delete"
+                        title="Delete User"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- User Details Panel -->
+    @if (selectedUser()) {
+      <div class="details-panel">
+        <div class="details-header">
+          <h3>User Details</h3>
+          <button (click)="closeDetails()" class="btn-close">✕</button>
+        </div>
+        <div class="details-content">
+          <div class="detail-section">
+            <h4>Personal Information</h4>
+            <p><strong>Username:</strong> {{ selectedUser()!.username }}</p>
+            <p><strong>Name:</strong> {{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}</p>
+            <p><strong>Email:</strong> {{ selectedUser()!.email }}</p>
+            <p><strong>Phone:</strong> {{ selectedUser()!.phone || 'N/A' }}</p>
+          </div>
+
+          <div class="detail-section">
+            <h4>Account Details</h4>
+            <p><strong>User ID:</strong> {{ selectedUser()!.id }}</p>
+            <p><strong>Role:</strong> 
+              <span [class]="'role-badge ' + getRoleBadgeClass(selectedUser()!.role)">
+                {{ selectedUser()!.role }}
+              </span>
+            </p>
+            <p><strong>Status:</strong> 
+              <span [class]="'status-badge ' + getStatusClass(selectedUser()!.status)">
+                {{ selectedUser()!.status }}
+              </span>
+            </p>
+            <p><strong>Created:</strong> {{ selectedUser()!.createdAt | date:'medium' }}</p>
+            @if (selectedUser()!.lastLogin) {
+              <p><strong>Last Login:</strong> {{ selectedUser()!.lastLogin | date:'medium' }}</p>
+            }
+          </div>
+
+          <div class="detail-section">
+            <h4>Access Levels</h4>
+            @if (selectedUser()!.accessLevel.length > 0) {
+              <div class="access-tags">
+                @for (access of selectedUser()!.accessLevel; track access) {
+                  <span class="access-tag">{{ access }}</span>
+                }
+              </div>
+            } @else {
+              <p class="no-access">No specific access levels assigned</p>
+            }
+          </div>
+
+          <div class="detail-section">
+            <h4>Actions</h4>
+            <div class="status-buttons">
+              @if (selectedUser()!.status === 'active') {
+                <button 
+                  (click)="updateUserStatus(selectedUser()!.id, 'inactive')"
+                  class="btn-status btn-inactive"
+                >
+                  Deactivate User
+                </button>
+              } @else {
+                <button 
+                  (click)="updateUserStatus(selectedUser()!.id, 'active')"
+                  class="btn-status btn-active"
+                >
+                  Activate User
+                </button>
+              }
+              <button 
+                (click)="editUser(selectedUser()!)"
+                class="btn-status btn-edit-full"
+              >
+                Edit User
+              </button>
+              <button 
+                (click)="deleteUser(selectedUser()!.id)"
+                class="btn-status btn-delete-full"
+              >
+                Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- User Form Modal -->
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="cancelForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ isEdit() ? 'Edit User' : 'Add New User' }}</h3>
+          <button (click)="cancelForm()" class="btn-close">✕</button>
+        </div>
+
+        <form #userForm="ngForm" (ngSubmit)="saveUser()" class="user-form">
+          <div class="form-section">
+            <h4>Account Information</h4>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="username">Username *</label>
+                <input 
+                  #usernameInput
+                  type="text" 
+                  id="username" 
+                  name="username"
+                  [(ngModel)]="user().username"
+                  required
+                  #username="ngModel"
+                  placeholder="Enter username"
+                />
+                @if (username.invalid && username.touched) {
+                  <small class="error">Username is required</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email"
+                  [(ngModel)]="user().email"
+                  required
+                  email
+                  #email="ngModel"
+                  placeholder="user@example.com"
+                />
+                @if (email.invalid && email.touched) {
+                  <small class="error">Valid email is required</small>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password {{ isEdit() ? '' : '*' }}</label>
+              <input 
+                type="password" 
+                id="password" 
+                name="password"
+                [(ngModel)]="user().password"
+                [required]="!isEdit()"
+                minlength="6"
+                #password="ngModel"
+                placeholder="Enter password (min 6 characters)"
+              />
+              @if (password.invalid && password.touched) {
+                <small class="error">Password must be at least 6 characters</small>
+              }
+              @if (isEdit()) {
+                <small class="hint">Leave blank to keep current password</small>
+              }
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Personal Information</h4>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  name="firstName"
+                  [(ngModel)]="user().firstName"
+                  required
+                  #firstName="ngModel"
+                  placeholder="John"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  name="lastName"
+                  [(ngModel)]="user().lastName"
+                  required
+                  #lastName="ngModel"
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                name="phone"
+                [(ngModel)]="user().phone"
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Role & Access</h4>
+            
+            <div class="form-group">
+              <label for="role">Role *</label>
+              <select 
+                id="role" 
+                name="role"
+                [(ngModel)]="user().role"
+                required
+                class="role-select"
+              >
+                @for (role of roles; track role.value) {
+                  <option [value]="role.value">
+                    {{ role.label }} - {{ role.description }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Access Levels</label>
+              <div class="access-grid">
+                @for (access of availableAccessLevels; track access.value) {
+                  <label class="access-checkbox">
+                    <input 
+                      type="checkbox"
+                      [checked]="hasAccessLevel(access.value)"
+                      (change)="toggleAccessLevel(access.value)"
+                    />
+                    <span class="access-icon">{{ access.icon }}</span>
+                    <span class="access-label">{{ access.label }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status *</label>
+              <select 
+                id="status" 
+                name="status"
+                [(ngModel)]="user().status"
+                required
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" [disabled]="userForm.invalid" class="btn-primary">
+              {{ isEdit() ? 'Update User' : 'Create User' }}
+            </button>
+            <button type="button" (click)="cancelForm()" class="btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

@@ -1,0 +1,437 @@
+<div class="guest-container">
+  <div class="page-header">
+    <div>
+      <h2>Guest Management</h2>
+      <p class="subtitle">Register and manage guest information</p>
+    </div>
+    <button class="btn-add" (click)="showForm.set(!showForm())">
+      <span class="icon">{{ showForm() ? '📋' : '➕' }}</span>
+      {{ showForm() ? 'View Guest List' : 'Add New Guest' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <!-- Modal Popup -->
+    <div class="modal-overlay" (click)="showForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingGuest() ? 'Edit Guest' : 'Add New Guest' }}</h2>
+          <button class="btn-close" (click)="showForm.set(false)" type="button">✕</button>
+        </div>
+
+        <div class="modal-body">
+          @if (!submitted()) {
+            <form #guestForm="ngForm" (ngSubmit)="onSubmit()" class="guest-form">
+              <div class="form-grid">
+                <!-- Personal Information Section -->
+                <div class="form-section">
+                  <h3>Personal Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input 
+              #firstNameInput
+              type="text" 
+              id="firstName" 
+              name="firstName"
+              [(ngModel)]="guest().firstName"
+              required
+              #firstName="ngModel"
+              placeholder="Enter first name"
+            />
+            @if (firstName.invalid && firstName.touched) {
+              <small class="error">First name is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input 
+              type="text" 
+              id="lastName" 
+              name="lastName"
+              [(ngModel)]="guest().lastName"
+              required
+              #lastName="ngModel"
+              placeholder="Enter last name"
+            />
+            @if (lastName.invalid && lastName.touched) {
+              <small class="error">Last name is required</small>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth *</label>
+            <input 
+              type="date" 
+              id="dateOfBirth" 
+              name="dateOfBirth"
+              [(ngModel)]="guest().dateOfBirth"
+              required
+              #dateOfBirth="ngModel"
+            />
+            @if (dateOfBirth.invalid && dateOfBirth.touched) {
+              <small class="error">Date of birth is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="nationality">Nationality *</label>
+            <input 
+              type="text" 
+              id="nationality" 
+              name="nationality"
+              [(ngModel)]="guest().nationality"
+              required
+              #nationality="ngModel"
+              placeholder="Enter nationality"
+            />
+            @if (nationality.invalid && nationality.touched) {
+              <small class="error">Nationality is required</small>
+            }
+          </div>
+                  </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="form-section">
+                  <h3>Contact Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email"
+              [(ngModel)]="guest().email"
+              required
+              email
+              #email="ngModel"
+              placeholder="guest@example.com"
+            />
+            @if (email.invalid && email.touched) {
+              <small class="error">Valid email is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone"
+              [(ngModel)]="guest().phone"
+              required
+              #phone="ngModel"
+              placeholder="+1 (555) 123-4567"
+            />
+            @if (phone.invalid && phone.touched) {
+              <small class="error">Phone number is required</small>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address *</label>
+          <input 
+            type="text" 
+            id="address" 
+            name="address"
+            [(ngModel)]="guest().address"
+            required
+            #address="ngModel"
+            placeholder="Street address"
+          />
+          @if (address.invalid && address.touched) {
+            <small class="error">Address is required</small>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City *</label>
+            <input 
+              type="text" 
+              id="city" 
+              name="city"
+              [(ngModel)]="guest().city"
+              required
+              #city="ngModel"
+              placeholder="City"
+            />
+            @if (city.invalid && city.touched) {
+              <small class="error">City is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="state">State/Province *</label>
+            <input 
+              type="text" 
+              id="state" 
+              name="state"
+              [(ngModel)]="guest().state"
+              required
+              #state="ngModel"
+              placeholder="State"
+            />
+            @if (state.invalid && state.touched) {
+              <small class="error">State is required</small>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="zipCode">ZIP/Postal Code *</label>
+            <input 
+              type="text" 
+              id="zipCode" 
+              name="zipCode"
+              [(ngModel)]="guest().zipCode"
+              required
+              #zipCode="ngModel"
+              placeholder="12345"
+            />
+            @if (zipCode.invalid && zipCode.touched) {
+              <small class="error">ZIP code is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country *</label>
+            <select 
+              id="country" 
+              name="country"
+              [(ngModel)]="guest().country"
+              required
+              #country="ngModel"
+            >
+              <option value="">Select Country</option>
+              @for (countryOption of countries; track countryOption) {
+                <option [value]="countryOption">{{ countryOption }}</option>
+              }
+            </select>
+            @if (country.invalid && country.touched) {
+              <small class="error">Country is required</small>
+            }
+          </div>
+                  </div>
+                </div>
+
+                <!-- Identification Section -->
+                <div class="form-section">
+                  <h3>Identification</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="idType">ID Type *</label>
+            <select 
+              id="idType" 
+              name="idType"
+              [(ngModel)]="guest().idType"
+              required
+              #idType="ngModel"
+            >
+              @for (type of idTypes; track type) {
+                <option [value]="type.toLowerCase()">{{ type }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="idNumber">ID Number *</label>
+            <input 
+              type="text" 
+              id="idNumber" 
+              name="idNumber"
+              [(ngModel)]="guest().idNumber"
+              required
+              #idNumber="ngModel"
+              placeholder="Enter ID number"
+            />
+            @if (idNumber.invalid && idNumber.touched) {
+              <small class="error">ID number is required</small>
+            }
+          </div>
+                  </div>
+                </div>
+
+                <!-- Emergency Contact Section -->
+                <div class="form-section">
+                  <h3>Emergency Contact</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emergencyContactName">Contact Name *</label>
+            <input 
+              type="text" 
+              id="emergencyContactName" 
+              name="emergencyContactName"
+              [(ngModel)]="guest().emergencyContactName"
+              required
+              #emergencyContactName="ngModel"
+              placeholder="Emergency contact name"
+            />
+            @if (emergencyContactName.invalid && emergencyContactName.touched) {
+              <small class="error">Emergency contact name is required</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="emergencyContactPhone">Contact Phone *</label>
+            <input 
+              type="tel" 
+              id="emergencyContactPhone" 
+              name="emergencyContactPhone"
+              [(ngModel)]="guest().emergencyContactPhone"
+              required
+              #emergencyContactPhone="ngModel"
+              placeholder="+1 (555) 123-4567"
+            />
+            @if (emergencyContactPhone.invalid && emergencyContactPhone.touched) {
+              <small class="error">Emergency contact phone is required</small>
+            }
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary" (click)="showForm.set(false)">
+                  Cancel
+                </button>
+                <button type="button" class="btn-secondary" (click)="resetForm()">
+                  Clear Form
+                </button>
+                <button type="submit" [disabled]="guestForm.invalid" class="btn-primary">
+                  {{ editingGuest() ? 'Update Guest' : 'Submit Guest Details' }}
+                </button>
+              </div>
+            </form>
+          } @else {
+            <div class="success-message">
+              <div class="success-icon">✓</div>
+              <h3>Guest Registration Successful!</h3>
+              <p class="guest-id">Guest ID: <strong>{{ savedGuestId() }}</strong></p>
+              <p>Thank you for providing your details.</p>
+              
+              <div class="guest-summary">
+                <div class="summary-section">
+                  <h4>Personal Information</h4>
+                  <p><strong>Name:</strong> {{ guest().firstName }} {{ guest().lastName }}</p>
+                  <p><strong>Date of Birth:</strong> {{ guest().dateOfBirth }}</p>
+                  <p><strong>Nationality:</strong> {{ guest().nationality }}</p>
+                </div>
+
+                <div class="summary-section">
+                  <h4>Contact Information</h4>
+                  <p><strong>Email:</strong> {{ guest().email }}</p>
+                  <p><strong>Phone:</strong> {{ guest().phone }}</p>
+                  <p><strong>Address:</strong> {{ guest().address }}, {{ guest().city }}, {{ guest().state }} {{ guest().zipCode }}</p>
+                  <p><strong>Country:</strong> {{ guest().country }}</p>
+                </div>
+
+                <div class="summary-section">
+                  <h4>Identification</h4>
+                  <p><strong>ID Type:</strong> {{ guest().idType }}</p>
+                  <p><strong>ID Number:</strong> {{ guest().idNumber }}</p>
+                </div>
+
+                <div class="summary-section">
+                  <h4>Emergency Contact</h4>
+                  <p><strong>Name:</strong> {{ guest().emergencyContactName }}</p>
+                  <p><strong>Phone:</strong> {{ guest().emergencyContactPhone }}</p>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="showForm.set(false)" class="btn-secondary">Close</button>
+                <button (click)="resetForm()" class="btn-primary">Register Another Guest</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Guest List View -->
+    <div class="guest-list-section">
+      <div class="search-filter-bar">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          placeholder="🔍 Search guests by name, email, phone, or ID..."
+          class="search-input-main"
+        />
+        <select [(ngModel)]="statusFilter" class="status-filter">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      @if (filteredGuestList().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <h3>No Guests Found</h3>
+          <p>Start by adding your first guest using the "Add New Guest" button above.</p>
+        </div>
+      } @else {
+        <div class="guest-grid">
+          @for (guest of filteredGuestList(); track guest.id) {
+            <div #guestCard class="guest-card">
+              <div class="guest-card-header">
+                <div class="guest-avatar">{{ guest.firstName.charAt(0) }}{{ guest.lastName.charAt(0) }}</div>
+                <div class="guest-info">
+                  <h4>{{ guest.firstName }} {{ guest.lastName }}</h4>
+                  <span class="guest-id-badge">{{ guest.id }}</span>
+                </div>
+                <div class="guest-card-actions-top">
+                  <button class="btn-icon edit" (click)="editGuest(guest)" title="Edit">✏️</button>
+                  <button class="btn-icon delete" (click)="deleteGuest(guest.id)" title="Delete">🗑️</button>
+                </div>
+              </div>
+              <div class="guest-card-body">
+                <div class="info-row">
+                  <span class="info-icon">📧</span>
+                  <span class="info-text">{{ guest.email }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📱</span>
+                  <span class="info-text">{{ guest.phone }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">🌍</span>
+                  <span class="info-text">{{ guest.nationality }}</span>
+                </div>
+              </div>
+              <div class="status-row-bottom">
+                <span class="status-badge clickable" [class]="guest.status" (click)="updateGuestStatus(guest)" title="Click to toggle status">{{ guest.status }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

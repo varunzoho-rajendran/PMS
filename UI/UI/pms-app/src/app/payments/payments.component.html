@@ -1,0 +1,328 @@
+<div class="payments-container">
+  <div class="payments-header">
+    <h2>💳 Payment Management</h2>
+    <button class="btn-primary" (click)="showPaymentForm.set(true)">
+      ➕ Process New Payment
+    </button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card collected">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalCollected() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-label">Total Collected</div>
+      </div>
+    </div>
+
+    <div class="stat-card pending">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ pendingAmount() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-label">Pending Amount</div>
+      </div>
+    </div>
+
+    <div class="stat-card today">
+      <div class="stat-icon">📅</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ todayCollection() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-label">Today's Collection</div>
+      </div>
+    </div>
+
+    <div class="stat-card transactions">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalTransactions() }}</div>
+        <div class="stat-label">Total Transactions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Form Modal -->
+  @if (showPaymentForm()) {
+    <div class="modal-overlay" (click)="resetForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>💳 Process Payment</h3>
+          <button class="btn-close" (click)="resetForm()">✖</button>
+        </div>
+
+        <form class="payment-form">
+          <div class="form-group">
+            <label for="reservation">Reservation *</label>
+            <select 
+              id="reservation"
+              [(ngModel)]="selectedReservationId"
+              name="reservation"
+              (change)="onReservationChange()"
+              required
+              class="form-control"
+            >
+              <option value="">Select Reservation</option>
+              @for (reservation of getActiveReservations(); track reservation.id) {
+                <option [value]="reservation.id">
+                  {{ reservation.id }} - {{ reservation.guestName }} - {{ reservation.roomType }} (${{ reservation.price }})
+                </option>
+              }
+            </select>
+            @if (selectedReservationId()) {
+              <div class="reservation-details">
+                {{ getReservationDetails(selectedReservationId()) }}
+              </div>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="amount">Amount *</label>
+              <input
+                #amountInput
+                type="number"
+                id="amount"
+                [(ngModel)]="amount"
+                name="amount"
+                step="0.01"
+                required
+                class="form-control"
+                placeholder="0.00 (negative for refunds)"
+              />
+              <small class="field-hint">💡 Enter negative amount for refunds or adjustments</small>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentMethod">Payment Method *</label>
+              <select
+                id="paymentMethod"
+                [(ngModel)]="paymentMethod"
+                name="paymentMethod"
+                required
+                class="form-control"
+              >
+                <option value="cash">💵 Cash</option>
+                <option value="credit-card">💳 Credit Card</option>
+                <option value="debit-card">💳 Debit Card</option>
+                <option value="upi">📱 UPI</option>
+                <option value="bank-transfer">🏦 Bank Transfer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="transactionId">Transaction ID (Optional)</label>
+            <input
+              type="text"
+              id="transactionId"
+              [(ngModel)]="transactionId"
+              name="transactionId"
+              class="form-control"
+              placeholder="Enter transaction/reference ID"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea
+              id="notes"
+              [(ngModel)]="notes"
+              name="notes"
+              rows="3"
+              class="form-control"
+              placeholder="Add any additional notes..."
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="resetForm()">
+              Cancel
+            </button>
+            <button type="button" class="btn-primary" (click)="postPayment()">
+              💰 Process Payment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="🔍 Search by ID, guest name, or transaction ID..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-controls">
+      <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="all">All Status</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+        <option value="refunded">Refunded</option>
+      </select>
+
+      <select [(ngModel)]="filterMethod" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="all">All Methods</option>
+        <option value="cash">Cash</option>
+        <option value="credit-card">Credit Card</option>
+        <option value="debit-card">Debit Card</option>
+        <option value="upi">UPI</option>
+        <option value="bank-transfer">Bank Transfer</option>
+      </select>
+
+      <button class="btn-export" (click)="exportPayments()">
+        📥 Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Payments List -->
+  <div class="payments-list">
+    <div class="results-count">
+      Found {{ getFilteredPayments().length }} payment(s)
+    </div>
+
+    @if (getFilteredPayments().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">💳</div>
+        <h3>No Payments Found</h3>
+        <p>Start by processing a new payment for a reservation.</p>
+        <button class="btn-primary" (click)="showPaymentForm.set(true)">
+          ➕ Process Payment
+        </button>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="payments-table">
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Date & Time</th>
+              <th>Guest Name</th>
+              <th>Reservation</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Transaction ID</th>
+              <th>Status</th>
+              <th>Processed By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of getFilteredPayments(); track payment.id) {
+              <tr>
+                <td class="payment-id">{{ payment.id }}</td>
+                <td>
+                  <div class="date-time">
+                    <div>{{ payment.paymentDate }}</div>
+                    <div class="time">{{ payment.paymentTime }}</div>
+                  </div>
+                </td>
+                <td class="guest-name">{{ payment.guestName }}</td>
+                <td>
+                  <div class="reservation-info">
+                    <div class="res-id">{{ payment.reservationId }}</div>
+                    <div class="res-details">{{ getReservationDetails(payment.reservationId) }}</div>
+                  </div>
+                </td>
+                <td [class]="payment.amount >= 0 ? 'amount' : 'amount negative'">
+                  <span *ngIf="payment.amount < 0" class="refund-badge">REFUND</span>
+                  ${{ payment.amount.toFixed(2) }}
+                </td>
+                <td>
+                  <span class="method-badge" [class]="payment.paymentMethod">
+                    @if (payment.paymentMethod === 'cash') { 💵 Cash }
+                    @else if (payment.paymentMethod === 'credit-card') { 💳 Credit Card }
+                    @else if (payment.paymentMethod === 'debit-card') { 💳 Debit Card }
+                    @else if (payment.paymentMethod === 'upi') { 📱 UPI }
+                    @else if (payment.paymentMethod === 'bank-transfer') { 🏦 Bank Transfer }
+                  </span>
+                </td>
+                <td class="transaction-id">{{ payment.transactionId || '-' }}</td>
+                <td>
+                  <span class="status-badge" [class]="payment.status">
+                    {{ payment.status }}
+                  </span>
+                </td>
+                <td>{{ payment.processedBy }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button 
+                      class="btn-icon btn-print" 
+                      (click)="printReceipt(payment)"
+                      title="Print Receipt"
+                    >
+                      🖨️
+                    </button>
+                    @if (payment.status === 'completed') {
+                      <button 
+                        class="btn-icon btn-refund" 
+                        (click)="updatePaymentStatus(payment, 'refunded')"
+                        title="Refund Payment"
+                      >
+                        ↩️
+                      </button>
+                    }
+                    @if (payment.status === 'pending') {
+                      <button 
+                        class="btn-icon btn-complete" 
+                        (click)="updatePaymentStatus(payment, 'completed')"
+                        title="Mark as Completed"
+                      >
+                        ✅
+                      </button>
+                      <button 
+                        class="btn-icon btn-fail" 
+                        (click)="updatePaymentStatus(payment, 'failed')"
+                        title="Mark as Failed"
+                      >
+                        ❌
+                      </button>
+                    }
+                    <button 
+                      class="btn-icon btn-delete" 
+                      (click)="deletePayment(payment)"
+                      title="Delete Payment"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              @if (payment.notes) {
+                <tr class="notes-row">
+                  <td colspan="10">
+                    <div class="payment-notes">
+                      <strong>Notes:</strong> {{ payment.notes }}
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

@@ -1,0 +1,179 @@
+<div class="reports-container">
+  <div class="reports-header">
+    <h2>📊 Reports & Analytics</h2>
+    <p>View, filter, and download reservation reports</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Reservations</div>
+        <div class="stat-value">{{ totalReservations() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">${{ totalRevenue().toFixed(2) }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <div class="stat-label">Confirmed</div>
+        <div class="stat-value">{{ confirmedCount() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ pendingCount() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">❌</div>
+      <div class="stat-content">
+        <div class="stat-label">Cancelled</div>
+        <div class="stat-value">{{ cancelledCount() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <h3>🔍 Filters</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Search</label>
+        <input 
+          type="text" 
+          [formControl]="searchControl"
+          placeholder="Search by name, email, or ID"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="checked-in">Checked In</option>
+          <option value="checked-out">Checked Out</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Room Type</label>
+        <select [(ngModel)]="filterRoomType" (ngModelChange)="applyFilters()">
+          <option value="all">All Room Types</option>
+          <option value="Single">Single</option>
+          <option value="Double">Double</option>
+          <option value="Suite">Suite</option>
+          <option value="Deluxe">Deluxe</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Check-In From</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filterDateFrom"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Check-In To</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filterDateTo"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-clear" (click)="clearFilters()">
+          🔄 Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Buttons -->
+  <div class="export-section">
+    <h3>📥 Export Data</h3>
+    <div class="export-buttons">
+      <button class="btn-export csv" (click)="downloadCSV()">
+        📊 Download CSV
+      </button>
+      <button class="btn-export pdf" (click)="downloadPDF()">
+        📄 Print/PDF
+      </button>
+      <div class="export-info">
+        {{ getFilteredReservations().length }} reservations will be exported
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservations Table -->
+  <div class="table-section">
+    <h3>📋 Reservation List</h3>
+    <div class="table-container">
+      @if (getFilteredReservations().length === 0) {
+        <div class="empty-state">
+          <p>📭 No reservations found matching the filters</p>
+        </div>
+      } @else {
+        <table #reportTable class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Guest Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Check-In</th>
+              <th>Check-Out</th>
+              <th>Room Type</th>
+              <th>Guests</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reservation of getFilteredReservations(); track reservation.id) {
+              <tr #reportRow>
+                <td>{{ reservation.id }}</td>
+                <td>{{ reservation.guestName }}</td>
+                <td>{{ reservation.email }}</td>
+                <td>{{ reservation.phone }}</td>
+                <td>{{ reservation.checkInDate }}</td>
+                <td>{{ reservation.checkOutDate }}</td>
+                <td>{{ reservation.roomType }}</td>
+                <td>{{ reservation.numberOfGuests }}</td>
+                <td>{{ (reservation.price || 0) | currency:'USD':'symbol':'1.2-2' }}</td>
+                <td>
+                  <span [class]="'status-badge ' + getStatusClass(reservation.status)">
+                    {{ reservation.status }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>

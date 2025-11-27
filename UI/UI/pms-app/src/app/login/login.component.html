@@ -1,0 +1,89 @@
+<div class="login-container">
+  <div class="login-box">
+    <div class="login-header">
+      <div class="logo">{{ i18n.icon('reservation') }}</div>
+      <h1>{{ i18n.t('login.title') }}</h1>
+      <p class="subtitle">{{ i18n.t('login.subtitle') }}</p>
+    </div>
+
+    <form #loginForm="ngForm" (ngSubmit)="login()" class="login-form">
+      @if (errorMessage()) {
+        <div class="error-alert">
+          ⚠️ {{ errorMessage() }}
+        </div>
+      }
+
+      <div class="form-group">
+        <label for="username">
+          <span class="icon">{{ i18n.icon('guest') }}</span>
+          {{ i18n.t('login.username') }}
+        </label>
+        <input 
+          #usernameInput
+          type="text" 
+          id="username" 
+          name="username"
+          [(ngModel)]="username"
+          (keypress)="onKeyPress($event)"
+          placeholder="Enter your username"
+          [disabled]="loading()"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">
+          <span class="icon">🔒</span>
+          {{ i18n.t('login.password') }}
+        </label>
+        <input 
+          #passwordInput
+          type="password" 
+          id="password" 
+          name="password"
+          [(ngModel)]="password"
+          (keypress)="onKeyPress($event)"
+          placeholder="Enter your password"
+          [disabled]="loading()"
+          required
+        />
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-login"
+        [disabled]="loading() || !username() || !password()"
+      >
+        @if (loading()) {
+          <span class="spinner">⏳</span>
+          {{ i18n.t('common.loading') }}
+        } @else {
+          {{ i18n.t('login.loginButton') }}
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <div class="info-message">
+        <p>🔑 <strong>Default Login Credentials:</strong></p>
+        <div class="credentials-grid">
+          <div class="credential-item">
+            <span class="credential-label">Admin:</span>
+            <span class="credential-value"><code>admin</code> / <code>admin123</code></span>
+          </div>
+          <div class="credential-item">
+            <span class="credential-label">Support:</span>
+            <span class="credential-value"><code>support</code> / <code>support123</code></span>
+          </div>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.85rem; opacity: 0.9;">
+          Both accounts have full system access. You can create additional users with different roles from the Users page.
+        </p>
+      </div>
+      <p class="copyright">
+        &copy; 2025 Property Management System
+      </p>
+    </div>
+  </div>
+</div>

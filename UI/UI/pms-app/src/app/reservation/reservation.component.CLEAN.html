@@ -1,0 +1,371 @@
+<div class="reservation-container">
+  <div class="page-header">
+    <div>
+      <h2>Reservation Management</h2>
+      <p class="subtitle">Create and manage hotel reservations</p>
+    </div>
+    <button class="btn-add" (click)="showForm.set(!showForm())">
+      <span class="icon">{{ showForm() ? '📋' : '➕' }}</span>
+      {{ showForm() ? 'View Reservation List' : 'Create New Reservation' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <!-- Modal Popup -->
+    <div class="modal-overlay" (click)="showForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingReservation() ? 'Edit Reservation' : 'Create New Reservation' }}</h2>
+          <button class="btn-close" (click)="showForm.set(false)" type="button">✕</button>
+        </div>
+
+        <div class="modal-body">
+          @if (!submitted()) {
+            <form #reservationForm="ngForm" (ngSubmit)="createReservation()" class="reservation-form">
+              <div class="form-grid">
+                <!-- Guest Information Section -->
+                <div class="form-section">
+                  <h3>Guest Information</h3>
+                  
+                  <div class="guest-search-section">
+                    <label>Search Existing Guest (Optional)</label>
+                    <div class="search-container">
+                      <input 
+                        #guestSearchInput
+                        type="text" 
+                        [(ngModel)]="searchQuery"
+                        name="searchQuery"
+                        placeholder="Search by name, email, phone, or ID..."
+                        (focus)="onSearchFocus()"
+                        (blur)="onSearchBlur()"
+                        class="search-input"
+                      />
+                      @if (selectedGuest()) {
+                        <button type="button" (click)="clearGuestSelection()" class="btn-clear">
+                          Clear Selection
+                        </button>
+                      }
+                    </div>
+                    
+                    @if (showGuestDropdown() && filteredGuests().length > 0) {
+                      <div class="guest-dropdown">
+                        @for (guest of filteredGuests(); track guest.id) {
+                          <div class="guest-item" (click)="selectGuest(guest)">
+                            <div class="guest-name">{{ guest.firstName }} {{ guest.lastName }}</div>
+                            <div class="guest-details">
+                              <span>{{ guest.email }}</span> • 
+                              <span>{{ guest.phone }}</span> • 
+                              <span class="guest-id">{{ guest.id }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                    
+                    @if (selectedGuest()) {
+                      <div class="selected-guest-info">
+                        <strong>Selected Guest:</strong> {{ selectedGuest()!.firstName }} {{ selectedGuest()!.lastName }} ({{ selectedGuest()!.id }})
+                      </div>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="guestName">Guest Name *</label>
+                    <input 
+                      type="text" 
+                      id="guestName" 
+                      name="guestName"
+                      [(ngModel)]="reservation().guestName"
+                      required
+                      #guestName="ngModel"
+                      placeholder="Enter full name"
+                    />
+                    @if (guestName.invalid && guestName.touched) {
+                      <small class="error">Guest name is required</small>
+                    }
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="email">Email *</label>
+                      <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        [(ngModel)]="reservation().email"
+                        required
+                        email
+                        #email="ngModel"
+                        placeholder="guest@example.com"
+                      />
+                      @if (email.invalid && email.touched) {
+                        <small class="error">Valid email is required</small>
+                      }
+                    </div>
+
+                    <div class="form-group">
+                      <label for="phone">Phone Number *</label>
+                      <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone"
+                        [(ngModel)]="reservation().phone"
+                        required
+                        #phone="ngModel"
+                        placeholder="+1 (555) 123-4567"
+                      />
+                      @if (phone.invalid && phone.touched) {
+                        <small class="error">Phone number is required</small>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Reservation Details Section -->
+                <div class="form-section">
+                  <h3>Reservation Details</h3>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="checkInDate">Check-in Date *</label>
+                      <input 
+                        type="date" 
+                        id="checkInDate" 
+                        name="checkInDate"
+                        [(ngModel)]="reservation().checkInDate"
+                        required
+                        #checkInDate="ngModel"
+                      />
+                      @if (checkInDate.invalid && checkInDate.touched) {
+                        <small class="error">Check-in date is required</small>
+                      }
+                    </div>
+
+                    <div class="form-group">
+                      <label for="checkOutDate">Check-out Date *</label>
+                      <input 
+                        type="date" 
+                        id="checkOutDate" 
+                        name="checkOutDate"
+                        [(ngModel)]="reservation().checkOutDate"
+                        required
+                        #checkOutDate="ngModel"
+                      />
+                      @if (checkOutDate.invalid && checkOutDate.touched) {
+                        <small class="error">Check-out date is required</small>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="numberOfGuests">Number of Guests *</label>
+                      <input 
+                        type="number" 
+                        id="numberOfGuests" 
+                        name="numberOfGuests"
+                        [(ngModel)]="reservation().numberOfGuests"
+                        required
+                        min="1"
+                        max="10"
+                        #numberOfGuests="ngModel"
+                      />
+                      @if (numberOfGuests.invalid && numberOfGuests.touched) {
+                        <small class="error">Number of guests must be between 1 and 10</small>
+                      }
+                    </div>
+
+                    <div class="form-group">
+                      <label for="roomType">Room Type *</label>
+                      <select 
+                        id="roomType" 
+                        name="roomType"
+                        [(ngModel)]="reservation().roomType"
+                        required
+                        #roomType="ngModel"
+                      >
+                        @for (type of roomTypes; track type) {
+                          <option [value]="type.toLowerCase()">{{ type }}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="price">Price (USD) *</label>
+                    <input 
+                      type="text" 
+                      id="price" 
+                      name="price"
+                      [(ngModel)]="reservation().price"
+                      appCurrencyInput
+                      required
+                      #price="ngModel"
+                      placeholder="$0.00"
+                    />
+                    @if (price.invalid && price.touched) {
+                      <small class="error">Price is required and must be a valid amount</small>
+                    }
+                  </div>
+
+                  <div class="form-group">
+                    <label for="specialRequests">Special Requests</label>
+                    <textarea 
+                      id="specialRequests" 
+                      name="specialRequests"
+                      [(ngModel)]="reservation().specialRequests"
+                      rows="4"
+                      placeholder="Any special requirements or requests..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary" (click)="showForm.set(false)">
+                  Cancel
+                </button>
+                <button type="button" class="btn-secondary" (click)="resetForm()">
+                  Reset
+                </button>
+                <button type="submit" [disabled]="reservationForm.invalid" class="btn-primary">
+                  {{ editingReservation() ? 'Update Reservation' : 'Submit Reservation' }}
+                </button>
+              </div>
+            </form>
+          } @else {
+            <div class="success-message">
+              <h3>✓ Reservation Created Successfully!</h3>
+              <p class="reservation-id">Reservation ID: <strong>{{ savedReservationId() }}</strong></p>
+              <div class="reservation-summary">
+                <p><strong>Guest Name:</strong> {{ reservation().guestName }}</p>
+                <p><strong>Email:</strong> {{ reservation().email }}</p>
+                <p><strong>Phone:</strong> {{ reservation().phone }}</p>
+                <p><strong>Check-in:</strong> {{ reservation().checkInDate }}</p>
+                <p><strong>Check-Out Date:</strong> {{ reservation().checkOutDate }}</p>
+                <p><strong>Number of Guests:</strong> {{ reservation().numberOfGuests }}</p>
+                <p><strong>Room Type:</strong> {{ reservation().roomType }}</p>
+                <p><strong>Price:</strong> {{ reservation().price | currency:'USD':'symbol':'1.2-2' }}</p>
+                @if (reservation().specialRequests) {
+                  <p><strong>Special Requests:</strong> {{ reservation().specialRequests }}</p>
+                }
+              </div>
+              
+              <div class="modal-footer">
+                <button (click)="showForm.set(false)" class="btn-secondary">Close</button>
+                <button (click)="resetForm()" class="btn-primary">Make Another Reservation</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Reservation List View -->
+    <div class="reservation-list-section">
+      <div class="search-filter-bar">
+        <input 
+          type="text" 
+          [formControl]="searchControl"
+          placeholder="🔍 Search reservations by guest name, email, phone, or ID..."
+          class="search-input-main"
+        />
+        <select [(ngModel)]="statusFilterRes" (ngModelChange)="applyFilters()" class="status-filter">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="checked-in">Checked In</option>
+          <option value="checked-out">Checked Out</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select [(ngModel)]="roomTypeFilter" (ngModelChange)="applyFilters()" class="status-filter">
+          <option value="all">All Room Types</option>
+          <option value="standard">Standard</option>
+          <option value="deluxe">Deluxe</option>
+          <option value="suite">Suite</option>
+          <option value="presidential suite">Presidential Suite</option>
+        </select>
+      </div>
+
+      @if (filteredReservationList().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">🏛️</div>
+          <h3>No Reservations Found</h3>
+          <p>Start by creating your first reservation using the "Create New Reservation" button above.</p>
+        </div>
+      } @else {
+        <div class="reservation-grid">
+          @for (res of filteredReservationList(); track res.id) {
+            <div #reservationCard class="reservation-card" [class]="'status-' + res.status">
+              <div class="reservation-card-header">
+                <div class="res-info">
+                  <h4>{{ res.guestName }}</h4>
+                  <span class="res-id-badge">{{ res.id }}</span>
+                </div>
+                <span class="status-badge" [class]="res.status">{{ res.status }}</span>
+              </div>
+              <div class="reservation-card-body">
+                <div class="info-row">
+                  <span class="info-icon">📧</span>
+                  <span class="info-text">{{ res.email }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📱</span>
+                  <span class="info-text">{{ res.phone }}</span>
+                </div>
+                <div class="date-range">
+                  <div class="info-row">
+                    <span class="info-icon">📅</span>
+                    <span class="info-text">Check-in: {{ res.checkInDate }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-icon">📅</span>
+                    <span class="info-text">Check-out: {{ res.checkOutDate }}</span>
+                  </div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">👥</span>
+                  <span class="info-text">{{ res.numberOfGuests }} Guest(s)</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">🛏️</span>
+                  <span class="info-text">{{ res.roomType }}</span>
+                </div>
+                <div class="info-row price-row">
+                  <span class="info-icon">💵</span>
+                  <span class="info-text price">${{ res.price.toFixed(2) }}</span>
+                </div>
+                @if (res.specialRequests) {
+                  <div class="info-row special-requests">
+                    <span class="info-icon">📝</span>
+                    <span class="info-text">{{ res.specialRequests }}</span>
+                  </div>
+                }
+              </div>
+              <div class="reservation-card-actions">
+                <button class="btn-action edit" (click)="editReservation(res)">✏️ Edit</button>
+                <button class="btn-action status" (click)="updateStatus(res)">🔄 Status</button>
+                <button class="btn-action delete" (click)="deleteReservation(res.id)">🗑️ Delete</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>
