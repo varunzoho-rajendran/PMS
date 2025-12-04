@@ -29,6 +29,7 @@ export class LoginComponent implements AfterViewInit {
   password = signal('');
   errorMessage = signal('');
   loading = signal(false);
+  azureLoading = signal(false);
 
   ngAfterViewInit() {
     // Auto-focus username input on load
@@ -64,6 +65,36 @@ export class LoginComponent implements AfterViewInit {
       this.password.set('');
       this.usernameInput.nativeElement.select();
     }
+  }
+
+  /**
+   * Login with Azure AD (Microsoft Account)
+   */
+  loginWithAzureAd() {
+    this.errorMessage.set('');
+    this.azureLoading.set(true);
+
+    this.authService.loginWithAzureAD().subscribe({
+      next: (success) => {
+        if (success) {
+          // Navigate to main application
+          this.router.navigate(['/list']);
+        } else {
+          this.errorMessage.set('Azure AD login failed. Please try again.');
+          this.azureLoading.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Azure AD login error:', error);
+        this.errorMessage.set(
+          error.message || 'Unable to sign in with Microsoft. Please try again or use username/password.'
+        );
+        this.azureLoading.set(false);
+      },
+      complete: () => {
+        this.azureLoading.set(false);
+      }
+    });
   }
 
   onKeyPress(event: KeyboardEvent) {

@@ -77,8 +77,8 @@ export class GuestComponent implements AfterViewInit {
   // List view properties
   showForm = signal(false);
   guestList = signal<Guest[]>([]);
-  searchTerm = signal('');
-  statusFilter = signal('all');
+  searchTerm = '';
+  statusFilter = 'all';
   editingGuest = signal<Guest | null>(null);
   
   // Error popup
@@ -95,12 +95,12 @@ export class GuestComponent implements AfterViewInit {
     let filtered = this.guestList();
     
     // Filter by status
-    if (this.statusFilter() !== 'all') {
-      filtered = filtered.filter(g => g.status === this.statusFilter());
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(g => g.status === this.statusFilter);
     }
     
     // Filter by search term
-    const term = this.searchTerm().toLowerCase();
+    const term = this.searchTerm.toLowerCase();
     if (term) {
       filtered = filtered.filter(g => {
         const fullName = `${g.firstName} ${g.lastName}`.toLowerCase();

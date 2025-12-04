@@ -235,6 +235,20 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label for="timezone">Timezone *</label>
+          <select 
+            id="timezone" 
+            name="timezone"
+            [(ngModel)]="property().timezone"
+            required
+          >
+            @for (tz of timezones; track tz.value) {
+              <option [value]="tz.value">{{ tz.label }}</option>
+            }
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="checkInTime">Check-In Time *</label>
@@ -381,7 +395,8 @@
           <h5>Details</h5>
           <p><strong>Rooms:</strong> {{ property().numberOfRooms }}</p>
           <p><strong>Check-In:</strong> {{ property().checkInTime }} | <strong>Check-Out:</strong> {{ property().checkOutTime }}</p>
-          <p><strong>Currency:</strong> {{ property().currency }} | <strong>Tax Rate:</strong> {{ property().taxRate }}%</p>
+          <p><strong>Currency:</strong> {{ property().currency }} | <strong>Timezone:</strong> {{ property().timezone }}</p>
+          <p><strong>Tax Rate:</strong> {{ property().taxRate }}%</p>
         </div>
 
         @if (property().amenities.length > 0) {

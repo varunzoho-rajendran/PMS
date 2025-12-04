@@ -50,6 +50,11 @@
   color: white;
 }
 
+.stat-card.deposits {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
 .stat-card.pending {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
@@ -421,6 +426,29 @@
   font-weight: 700;
   margin-right: 0.5rem;
   vertical-align: middle;
+}
+
+.deposit-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  animation: depositPulse 2s ease-in-out infinite;
+}
+
+@keyframes depositPulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.5);
+  }
 }
 
 .method-badge {

@@ -11,15 +11,23 @@
     <div class="stat-card collected">
       <div class="stat-icon">💰</div>
       <div class="stat-content">
-        <div class="stat-value">{{ totalCollected() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-value">{{ format.formatCurrency(totalCollected()) }}</div>
         <div class="stat-label">Total Collected</div>
+      </div>
+    </div>
+
+    <div class="stat-card deposits">
+      <div class="stat-icon">🏨</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ format.formatCurrency(totalDeposits()) }}</div>
+        <div class="stat-label">Deposits Collected</div>
       </div>
     </div>
 
     <div class="stat-card pending">
       <div class="stat-icon">⏳</div>
       <div class="stat-content">
-        <div class="stat-value">{{ pendingAmount() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-value">{{ format.formatCurrency(pendingAmount()) }}</div>
         <div class="stat-label">Pending Amount</div>
       </div>
     </div>
@@ -27,7 +35,7 @@
     <div class="stat-card today">
       <div class="stat-icon">📅</div>
       <div class="stat-content">
-        <div class="stat-value">{{ todayCollection() | currency:'USD':'symbol':'1.2-2' }}</div>
+        <div class="stat-value">{{ format.formatCurrency(todayCollection()) }}</div>
         <div class="stat-label">Today's Collection</div>
       </div>
     </div>
@@ -43,11 +51,11 @@
 
   <!-- Payment Form Modal -->
   @if (showPaymentForm()) {
-    <div class="modal-overlay" (click)="resetForm()">
+    <div class="modal-overlay" (click)="closeModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>💳 Process Payment</h3>
-          <button class="btn-close" (click)="resetForm()">✖</button>
+          <button class="btn-close" (click)="closeModal()">✖</button>
         </div>
 
         <form class="payment-form">
@@ -64,7 +72,7 @@
               <option value="">Select Reservation</option>
               @for (reservation of getActiveReservations(); track reservation.id) {
                 <option [value]="reservation.id">
-                  {{ reservation.id }} - {{ reservation.guestName }} - {{ reservation.roomType }} (${{ reservation.price }})
+                  {{ reservation.id }} - {{ reservation.guestName }} - {{ reservation.roomType }} ({{ format.formatCurrency(reservation.price) }})
                 </option>
               }
             </select>
@@ -87,7 +95,7 @@
                 step="0.01"
                 required
                 class="form-control"
-                placeholder="0.00 (negative for refunds)"
+                [placeholder]="format.getCurrencySymbol() + '0.00 (negative for refunds)'"
               />
               <small class="field-hint">💡 Enter negative amount for refunds or adjustments</small>
             </div>
@@ -217,7 +225,12 @@
           <tbody>
             @for (payment of getFilteredPayments(); track payment.id) {
               <tr>
-                <td class="payment-id">{{ payment.id }}</td>
+                <td class="payment-id">
+                  {{ payment.id }}
+                  @if (payment.paymentType === 'deposit') {
+                    <span class="deposit-badge" title="Check-in Deposit">🏨 DEPOSIT</span>
+                  }
+                </td>
                 <td>
                   <div class="date-time">
                     <div>{{ payment.paymentDate }}</div>
@@ -233,7 +246,7 @@
                 </td>
                 <td [class]="payment.amount >= 0 ? 'amount' : 'amount negative'">
                   <span *ngIf="payment.amount < 0" class="refund-badge">REFUND</span>
-                  ${{ payment.amount.toFixed(2) }}
+                  {{ format.formatCurrency(payment.amount) }}
                 </td>
                 <td>
                   <span class="method-badge" [class]="payment.paymentMethod">

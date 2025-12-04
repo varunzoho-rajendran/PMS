@@ -52,6 +52,22 @@ export interface Guest {
   status: 'active' | 'inactive';
 }
 
+export interface Payment {
+  id: string;
+  reservationId: string;
+  guestId: string;
+  guestName: string;
+  amount: number;
+  paymentMethod: 'cash' | 'credit-card' | 'debit-card' | 'upi' | 'bank-transfer';
+  paymentDate: string;
+  paymentTime: string;
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  transactionId?: string;
+  notes?: string;
+  processedBy: string;
+  paymentType?: 'deposit' | 'room-charge' | 'service' | 'refund' | 'other';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -60,6 +76,11 @@ export class StorageService {
   private readonly GUESTS_KEY = 'pms_guests';
   private readonly PROPERTY_KEY = 'pms_property';
   private readonly USERS_KEY = 'pms_users';
+  private readonly PAYMENTS_KEY = 'pms_payments';
+  private readonly RATE_PLANS_KEY = 'pms_rate_plans';
+  private readonly DATE_RATES_KEY = 'pms_date_rates';
+  private readonly PACKAGE_PLANS_KEY = 'pms_package_plans';
+  private readonly ROOM_TYPES_KEY = 'pms_room_types';
 
   constructor() {
     this.initializeStorage();
@@ -264,5 +285,253 @@ export class StorageService {
       return num > max ? num : max;
     }, 0);
     return `USR${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Payment Management Methods
+  getAllPayments(): Payment[] {
+    const data = localStorage.getItem(this.PAYMENTS_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  private savePayments(payments: Payment[]): void {
+    localStorage.setItem(this.PAYMENTS_KEY, JSON.stringify(payments));
+  }
+
+  savePayment(payment: Payment): void {
+    const payments = this.getAllPayments();
+    const index = payments.findIndex(p => p.id === payment.id);
+    
+    if (index >= 0) {
+      payments[index] = payment;
+    } else {
+      payments.unshift(payment);
+    }
+    
+    this.savePayments(payments);
+  }
+
+  getPaymentById(id: string): Payment | undefined {
+    return this.getAllPayments().find(payment => payment.id === id);
+  }
+
+  getPaymentsByReservationId(reservationId: string): Payment[] {
+    return this.getAllPayments().filter(payment => payment.reservationId === reservationId);
+  }
+
+  deletePayment(id: string): void {
+    const payments = this.getAllPayments().filter(p => p.id !== id);
+    this.savePayments(payments);
+  }
+
+  generatePaymentId(): string {
+    const payments = this.getAllPayments();
+    const maxId = payments.reduce((max, payment) => {
+      const num = parseInt(payment.id.replace('PAY', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `PAY${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Rate Plan methods
+  getAllRatePlans(): any[] {
+    const data = localStorage.getItem(this.RATE_PLANS_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  saveRatePlan(ratePlan: any): void {
+    const ratePlans = this.getAllRatePlans();
+    const index = ratePlans.findIndex(rp => rp.id === ratePlan.id);
+    
+    if (index >= 0) {
+      ratePlans[index] = ratePlan;
+    } else {
+      ratePlans.push(ratePlan);
+    }
+    
+    localStorage.setItem(this.RATE_PLANS_KEY, JSON.stringify(ratePlans));
+  }
+
+  deleteRatePlan(id: string): void {
+    const ratePlans = this.getAllRatePlans().filter(rp => rp.id !== id);
+    localStorage.setItem(this.RATE_PLANS_KEY, JSON.stringify(ratePlans));
+  }
+
+  generateRatePlanId(): string {
+    const ratePlans = this.getAllRatePlans();
+    const maxId = ratePlans.reduce((max, rp) => {
+      const num = parseInt(rp.id.replace('RP', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `RP${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Date Rate methods
+  getAllDateRates(): any[] {
+    const data = localStorage.getItem(this.DATE_RATES_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  saveDateRate(dateRate: any): void {
+    const dateRates = this.getAllDateRates();
+    const index = dateRates.findIndex(dr => dr.id === dateRate.id);
+    
+    if (index >= 0) {
+      dateRates[index] = dateRate;
+    } else {
+      dateRates.push(dateRate);
+    }
+    
+    localStorage.setItem(this.DATE_RATES_KEY, JSON.stringify(dateRates));
+  }
+
+  deleteDateRate(id: string): void {
+    const dateRates = this.getAllDateRates().filter(dr => dr.id !== id);
+    localStorage.setItem(this.DATE_RATES_KEY, JSON.stringify(dateRates));
+  }
+
+  generateDateRateId(): string {
+    const dateRates = this.getAllDateRates();
+    const maxId = dateRates.reduce((max, dr) => {
+      const num = parseInt(dr.id.replace('DR', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `DR${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Package Plan methods
+  getAllPackagePlans(): any[] {
+    const data = localStorage.getItem(this.PACKAGE_PLANS_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  savePackagePlan(packagePlan: any): void {
+    const packagePlans = this.getAllPackagePlans();
+    const index = packagePlans.findIndex(pp => pp.id === packagePlan.id);
+    
+    if (index >= 0) {
+      packagePlans[index] = packagePlan;
+    } else {
+      packagePlans.push(packagePlan);
+    }
+    
+    localStorage.setItem(this.PACKAGE_PLANS_KEY, JSON.stringify(packagePlans));
+  }
+
+  deletePackagePlan(id: string): void {
+    const packagePlans = this.getAllPackagePlans().filter(pp => pp.id !== id);
+    localStorage.setItem(this.PACKAGE_PLANS_KEY, JSON.stringify(packagePlans));
+  }
+
+  generatePackagePlanId(): string {
+    const packagePlans = this.getAllPackagePlans();
+    const maxId = packagePlans.reduce((max, pp) => {
+      const num = parseInt(pp.id.replace('PKG', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `PKG${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Rate Plan Restrictions
+  private readonly RATE_RESTRICTIONS_KEY = 'pms_rate_restrictions';
+
+  getAllRatePlanRestrictions(): any[] {
+    const data = localStorage.getItem(this.RATE_RESTRICTIONS_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  saveRatePlanRestriction(restriction: any): void {
+    const restrictions = this.getAllRatePlanRestrictions();
+    const index = restrictions.findIndex(r => r.id === restriction.id);
+    if (index > -1) {
+      restrictions[index] = restriction;
+    } else {
+      restrictions.push(restriction);
+    }
+    localStorage.setItem(this.RATE_RESTRICTIONS_KEY, JSON.stringify(restrictions));
+  }
+
+  deleteRatePlanRestriction(id: string): void {
+    const restrictions = this.getAllRatePlanRestrictions().filter(r => r.id !== id);
+    localStorage.setItem(this.RATE_RESTRICTIONS_KEY, JSON.stringify(restrictions));
+  }
+
+  generateRatePlanRestrictionId(): string {
+    const restrictions = this.getAllRatePlanRestrictions();
+    const maxId = restrictions.reduce((max, r) => {
+      const num = parseInt(r.id.replace('RR', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `RR${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Package Restrictions
+  private readonly PACKAGE_RESTRICTIONS_KEY = 'pms_package_restrictions';
+
+  getAllPackageRestrictions(): any[] {
+    const data = localStorage.getItem(this.PACKAGE_RESTRICTIONS_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  savePackageRestriction(restriction: any): void {
+    const restrictions = this.getAllPackageRestrictions();
+    const index = restrictions.findIndex(r => r.id === restriction.id);
+    if (index > -1) {
+      restrictions[index] = restriction;
+    } else {
+      restrictions.push(restriction);
+    }
+    localStorage.setItem(this.PACKAGE_RESTRICTIONS_KEY, JSON.stringify(restrictions));
+  }
+
+  deletePackageRestriction(id: string): void {
+    const restrictions = this.getAllPackageRestrictions().filter(r => r.id !== id);
+    localStorage.setItem(this.PACKAGE_RESTRICTIONS_KEY, JSON.stringify(restrictions));
+  }
+
+  generatePackageRestrictionId(): string {
+    const restrictions = this.getAllPackageRestrictions();
+    const maxId = restrictions.reduce((max, r) => {
+      const num = parseInt(r.id.replace('PR', ''));
+      return num > max ? num : max;
+    }, 0);
+    return `PR${String(maxId + 1).padStart(3, '0')}`;
+  }
+
+  // Room Types Methods
+  getAllRoomTypes(): string[] {
+    const data = localStorage.getItem(this.ROOM_TYPES_KEY);
+    if (!data) {
+      // Initialize with default room types
+      const defaultTypes = ['standard', 'deluxe', 'suite', 'presidential-suite'];
+      this.saveRoomTypes(defaultTypes);
+      return defaultTypes;
+    }
+    return JSON.parse(data);
+  }
+
+  private saveRoomTypes(roomTypes: string[]): void {
+    localStorage.setItem(this.ROOM_TYPES_KEY, JSON.stringify(roomTypes));
+  }
+
+  saveRoomType(roomType: string): void {
+    const roomTypes = this.getAllRoomTypes();
+    if (!roomTypes.includes(roomType)) {
+      roomTypes.push(roomType);
+      this.saveRoomTypes(roomTypes);
+    }
+  }
+
+  updateRoomType(oldRoomType: string, newRoomType: string): void {
+    const roomTypes = this.getAllRoomTypes();
+    const index = roomTypes.indexOf(oldRoomType);
+    if (index > -1) {
+      roomTypes[index] = newRoomType;
+      this.saveRoomTypes(roomTypes);
+    }
+  }
+
+  deleteRoomType(roomType: string): void {
+    const roomTypes = this.getAllRoomTypes().filter(rt => rt !== roomType);
+    this.saveRoomTypes(roomTypes);
   }
 }

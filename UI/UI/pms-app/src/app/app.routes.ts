@@ -83,5 +83,10 @@ export const routes: Routes = [
     path: 'users', 
     loadComponent: () => import('./users/users.component').then(m => m.UsersComponent),
     canActivate: [accessGuard('users')] 
+  },
+  { 
+    path: 'settings', 
+    loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent),
+    canActivate: [accessGuard('property')] 
   }
 ];

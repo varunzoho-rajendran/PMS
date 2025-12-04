@@ -28,6 +28,7 @@ export interface PropertyInfo {
   policies: string;
   taxRate: number;
   currency: string;
+  timezone: string;
   font?: string;
   theme?: string;
   createdAt: string;
@@ -77,6 +78,7 @@ export class PropertyComponent implements OnInit, AfterViewInit {
     policies: '',
     taxRate: 0,
     currency: 'USD',
+    timezone: 'America/New_York',
     font: 'system',
     theme: 'default',
     createdAt: '',
@@ -85,7 +87,22 @@ export class PropertyComponent implements OnInit, AfterViewInit {
 
   propertyTypes = ['Hotel', 'Resort', 'Motel', 'Hostel', 'Bed & Breakfast', 'Apartment', 'Villa'];
   starRatings = [1, 2, 3, 4, 5];
-  currencies = ['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'JPY'];
+  currencies = ['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'JPY', 'CNY', 'CHF', 'SGD'];
+  timezones = [
+    { value: 'America/New_York', label: 'Eastern Time (US)' },
+    { value: 'America/Chicago', label: 'Central Time (US)' },
+    { value: 'America/Denver', label: 'Mountain Time (US)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
+    { value: 'America/Anchorage', label: 'Alaska Time (US)' },
+    { value: 'Pacific/Honolulu', label: 'Hawaii Time (US)' },
+    { value: 'Europe/London', label: 'London (GMT)' },
+    { value: 'Europe/Paris', label: 'Paris (CET)' },
+    { value: 'Asia/Dubai', label: 'Dubai (GST)' },
+    { value: 'Asia/Kolkata', label: 'India (IST)' },
+    { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+    { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+    { value: 'Australia/Sydney', label: 'Sydney (AEDT)' }
+  ];
   fonts = ['System Default', 'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana', 'Courier New', 'Roboto', 'Open Sans', 'Lato'];
   themes = ['Default', 'Light', 'Dark', 'Blue', 'Green', 'Purple', 'Orange'];
   
@@ -216,6 +233,7 @@ export class PropertyComponent implements OnInit, AfterViewInit {
         policies: '',
         taxRate: 0,
         currency: 'USD',
+        timezone: 'America/New_York',
         createdAt: '',
         updatedAt: ''
       });

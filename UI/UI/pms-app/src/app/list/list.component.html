@@ -47,7 +47,7 @@
       <div class="analytics-card revenue">
         <div class="card-icon">💰</div>
         <div class="card-content">
-          <div class="card-value">{{ totalRevenue() | currency:'USD':'symbol':'1.2-2' }}</div>
+          <div class="card-value">{{ format.formatCurrency(totalRevenue()) }}</div>
           <div class="card-label">Total Revenue</div>
         </div>
       </div>
@@ -131,40 +131,40 @@
             <div class="bar-container">
               <div class="bar-fill confirmed" 
                    [style.width.%]="getRevenuePercentage('confirmed')"
-                   [attr.data-value]="(getRevenueByStatus('confirmed') | currency:'USD':'symbol':'1.2-2')">
+                   [attr.data-value]="format.formatCurrency(getRevenueByStatus('confirmed'))">
               </div>
             </div>
-            <div class="bar-value">{{ getRevenueByStatus('confirmed') | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="bar-value">{{ format.formatCurrency(getRevenueByStatus('confirmed')) }}</div>
           </div>
           <div class="bar-item">
             <div class="bar-label">Checked-In</div>
             <div class="bar-container">
               <div class="bar-fill checked-in" 
                    [style.width.%]="getRevenuePercentage('checked-in')"
-                   [attr.data-value]="(getRevenueByStatus('checked-in') | currency:'USD':'symbol':'1.2-2')">
+                   [attr.data-value]="format.formatCurrency(getRevenueByStatus('checked-in'))">
               </div>
             </div>
-            <div class="bar-value">{{ getRevenueByStatus('checked-in') | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="bar-value">{{ format.formatCurrency(getRevenueByStatus('checked-in')) }}</div>
           </div>
           <div class="bar-item">
             <div class="bar-label">Checked-Out</div>
             <div class="bar-container">
               <div class="bar-fill checked-out" 
                    [style.width.%]="getRevenuePercentage('checked-out')"
-                   [attr.data-value]="(getRevenueByStatus('checked-out') | currency:'USD':'symbol':'1.2-2')">
+                   [attr.data-value]="format.formatCurrency(getRevenueByStatus('checked-out'))">
               </div>
             </div>
-            <div class="bar-value">{{ getRevenueByStatus('checked-out') | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="bar-value">{{ format.formatCurrency(getRevenueByStatus('checked-out')) }}</div>
           </div>
           <div class="bar-item">
             <div class="bar-label">Pending</div>
             <div class="bar-container">
               <div class="bar-fill pending" 
                    [style.width.%]="getRevenuePercentage('pending')"
-                   [attr.data-value]="(getRevenueByStatus('pending') | currency:'USD':'symbol':'1.2-2')">
+                   [attr.data-value]="format.formatCurrency(getRevenueByStatus('pending'))">
               </div>
             </div>
-            <div class="bar-value">{{ getRevenueByStatus('pending') | currency:'USD':'symbol':'1.2-2' }}</div>
+            <div class="bar-value">{{ format.formatCurrency(getRevenueByStatus('pending')) }}</div>
           </div>
         </div>
       </div>
@@ -252,7 +252,7 @@
                 <td>{{ reservation.checkOutDate }}</td>
                 <td><span class="room-badge">{{ reservation.roomType }}</span></td>
                 <td class="text-center">{{ reservation.numberOfGuests }}</td>
-                <td class="price-cell"><strong>{{ (reservation.price || 0) | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                <td class="price-cell"><strong>{{ format.formatCurrency(reservation.price || 0) }}</strong></td>
                 <td>
                   <span [class]="'status-badge ' + reservation.status">
                     {{ reservation.status }}

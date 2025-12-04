@@ -4,6 +4,7 @@ import { FormsModule, NgForm, ReactiveFormsModule, FormControl } from '@angular/
 import { ActivatedRoute } from '@angular/router';
 import { StorageService, Reservation } from '../services/storage.service';
 import { LocalizationService } from '../services/localization.service';
+import { FormatService } from '../services/format.service';
 import { ErrorPopupComponent, ErrorMessage } from '../error-popup/error-popup.component';
 import { ConfirmPopupComponent, ConfirmMessage } from '../confirm-popup/confirm-popup.component';
 import { debounceTime, switchMap, of, Subject, takeUntil, forkJoin } from 'rxjs';
@@ -34,6 +35,7 @@ export class ChargesComponent implements OnInit, AfterViewInit, OnDestroy {
   private storageService = inject(StorageService);
   private route = inject(ActivatedRoute);
   public i18n = inject(LocalizationService);
+  public format = inject(FormatService);
   private destroy$ = new Subject<void>();
   private platformId = inject(PLATFORM_ID);
   
@@ -293,6 +295,35 @@ export class ChargesComponent implements OnInit, AfterViewInit, OnDestroy {
     return `CHG${String(maxId + 1).padStart(4, '0')}`;
   }
 
+  hasFormData(): boolean {
+    return this.selectedReservationId() !== '' ||
+           this.description() !== '' ||
+           this.amount() !== 0 ||
+           this.quantity() !== 1 ||
+           this.notes() !== '';
+  }
+
+  async closeModal() {
+    // If form has data, ask for confirmation
+    if (this.hasFormData()) {
+      const confirmed = await this.showConfirm(
+        'Close Form',
+        'You have unsaved changes. Are you sure you want to close?',
+        'Close',
+        'Cancel'
+      );
+      if (!confirmed) return;
+    }
+    
+    this.selectedReservationId.set('');
+    this.chargeType.set('room-service');
+    this.description.set('');
+    this.amount.set(0);
+    this.quantity.set(1);
+    this.notes.set('');
+    this.showChargeForm.set(false);
+  }
+
   async resetForm() {
     const confirmed = await this.showConfirm(
       'Reset Form',
@@ -303,13 +334,7 @@ export class ChargesComponent implements OnInit, AfterViewInit, OnDestroy {
     
     if (!confirmed) return;
     
-    this.selectedReservationId.set('');
-    this.chargeType.set('room-service');
-    this.description.set('');
-    this.amount.set(0);
-    this.quantity.set(1);
-    this.notes.set('');
-    this.showChargeForm.set(false);
+    this.closeModal();
   }
 
   updateChargeStatus(charge: Charge, newStatus: 'pending' | 'posted' | 'paid' | 'cancelled') {

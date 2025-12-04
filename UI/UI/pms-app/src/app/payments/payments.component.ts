@@ -2,8 +2,9 @@ import { Component, signal, inject, OnInit, ViewChild, ElementRef, AfterViewInit
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, NgForm, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { StorageService, Reservation, Guest } from '../services/storage.service';
+import { StorageService, Reservation, Guest, Payment as StoragePayment } from '../services/storage.service';
 import { LocalizationService } from '../services/localization.service';
+import { FormatService } from '../services/format.service';
 import { ErrorPopupComponent, ErrorMessage } from '../error-popup/error-popup.component';
 import { ConfirmPopupComponent, ConfirmMessage } from '../confirm-popup/confirm-popup.component';
 import { debounceTime, switchMap, of, Subject, takeUntil, forkJoin } from 'rxjs';
@@ -21,6 +22,7 @@ export interface Payment {
   transactionId?: string;
   notes?: string;
   processedBy: string;
+  paymentType?: 'deposit' | 'room-charge' | 'service' | 'refund' | 'other';
 }
 
 @Component({
@@ -33,6 +35,7 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
   private storageService = inject(StorageService);
   private route = inject(ActivatedRoute);
   public i18n = inject(LocalizationService);
+  public format = inject(FormatService);
   private destroy$ = new Subject<void>();
   private platformId = inject(PLATFORM_ID);
   
@@ -101,6 +104,7 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
   pendingAmount = signal<number>(0);
   todayCollection = signal<number>(0);
   totalTransactions = signal<number>(0);
+  totalDeposits = signal<number>(0);
 
   ngOnInit() {
     this.checkPageRefresh();
@@ -227,12 +231,12 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getPaymentsFromStorage(): Payment[] {
-    const data = localStorage.getItem('pms_payments');
-    return data ? JSON.parse(data) : [];
+    return this.storageService.getAllPayments();
   }
 
   savePaymentsToStorage(payments: Payment[]) {
-    localStorage.setItem('pms_payments', JSON.stringify(payments));
+    // Save all payments back to storage
+    payments.forEach(payment => this.storageService.savePayment(payment));
   }
 
   getSelectedReservation(): Reservation | undefined {
@@ -277,13 +281,14 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
       status: 'completed',
       transactionId: this.transactionId() || undefined,
       notes: this.notes() || undefined,
-      processedBy: currentUser.username || 'admin'
+      processedBy: currentUser.username || 'admin',
+      paymentType: 'other'
     };
 
-    const currentPayments = this.payments();
-    currentPayments.unshift(payment);
+    this.storageService.savePayment(payment);
+    const currentPayments = this.storageService.getAllPayments();
     this.payments.set(currentPayments);
-    this.savePaymentsToStorage(currentPayments);
+    this.filteredPayments.set(currentPayments);
 
     this.calculateStatistics();
     this.resetForm();
@@ -291,17 +296,28 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   generatePaymentId(): string {
-    const payments = this.payments();
-    const maxId = payments.length > 0
-      ? Math.max(...payments.map(p => parseInt(p.id.replace('PAY', ''))))
-      : 0;
-    return `PAY${String(maxId + 1).padStart(3, '0')}`;
+    return this.storageService.generatePaymentId();
   }
 
-  resetForm() {
-    if (!confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
-      return;
+  hasFormData(): boolean {
+    return this.selectedReservationId() !== '' ||
+           this.amount() !== 0 ||
+           this.transactionId() !== '' ||
+           this.notes() !== '';
+  }
+
+  async closeModal() {
+    // If form has data, ask for confirmation
+    if (this.hasFormData()) {
+      const confirmed = await this.showConfirm(
+        'Close Form',
+        'You have unsaved changes. Are you sure you want to close?',
+        'Close',
+        'Cancel'
+      );
+      if (!confirmed) return;
     }
+    
     this.selectedReservationId.set('');
     this.amount.set(0);
     this.paymentMethod.set('cash');
@@ -311,15 +327,20 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editingPayment.set(null);
   }
 
-  updatePaymentStatus(payment: Payment, newStatus: 'completed' | 'pending' | 'failed' | 'refunded') {
-    const currentPayments = this.payments();
-    const index = currentPayments.findIndex(p => p.id === payment.id);
-    if (index !== -1) {
-      currentPayments[index] = { ...payment, status: newStatus };
-      this.payments.set([...currentPayments]);
-      this.savePaymentsToStorage(currentPayments);
-      this.calculateStatistics();
+  resetForm() {
+    if (!confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+      return;
     }
+    this.closeModal();
+  }
+
+  updatePaymentStatus(payment: Payment, newStatus: 'completed' | 'pending' | 'failed' | 'refunded') {
+    const updatedPayment = { ...payment, status: newStatus };
+    this.storageService.savePayment(updatedPayment);
+    const currentPayments = this.storageService.getAllPayments();
+    this.payments.set(currentPayments);
+    this.filteredPayments.set(this.performSearch(this.searchControl.value || ''));
+    this.calculateStatistics();
   }
 
   async deletePayment(payment: Payment) {
@@ -332,9 +353,10 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
     
     if (!confirmed) return;
     
-    const currentPayments = this.payments().filter(p => p.id !== payment.id);
+    this.storageService.deletePayment(payment.id);
+    const currentPayments = this.storageService.getAllPayments();
     this.payments.set(currentPayments);
-    this.savePaymentsToStorage(currentPayments);
+    this.filteredPayments.set(this.performSearch(this.searchControl.value || ''));
     this.calculateStatistics();
   }
 
@@ -366,6 +388,12 @@ export class PaymentsComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Total transactions
     this.totalTransactions.set(payments.length);
+
+    // Total deposits collected
+    const depositsTotal = payments
+      .filter(p => p.paymentType === 'deposit' && p.status === 'completed')
+      .reduce((sum, p) => sum + p.amount, 0);
+    this.totalDeposits.set(depositsTotal);
   }
 
   getActiveReservations(): Reservation[] {

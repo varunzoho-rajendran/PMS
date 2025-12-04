@@ -238,6 +238,32 @@ export class UsersComponent implements OnInit, AfterViewInit, OnDestroy {
     
     if (!confirmed) return;
     
+    this.closeModal();
+  }
+
+  hasFormData(): boolean {
+    const u = this.user();
+    return u.username !== '' ||
+           u.email !== '' ||
+           u.password !== '' ||
+           u.firstName !== '' ||
+           u.lastName !== '' ||
+           u.phone !== '';
+  }
+
+  async closeModal() {
+    // If form has data, ask for confirmation
+    if (this.hasFormData()) {
+      const confirmed = await this.showConfirm(
+        'Close Form',
+        'You have unsaved changes. Are you sure you want to close?',
+        'Close',
+        'Cancel'
+      );
+      if (!confirmed) return;
+    }
+    
+    this.showForm.set(false);
     this.user.set({
       id: '',
       username: '',
@@ -255,8 +281,7 @@ export class UsersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   cancelForm() {
-    this.showForm.set(false);
-    this.resetForm();
+    this.closeModal();
   }
 
   getRoleBadgeClass(role: string): string {

@@ -1,0 +1,790 @@
+<div class="settings-container">
+  <div class="page-header">
+    <div>
+      <h2>⚙️ Settings</h2>
+      <p class="subtitle">Manage rate plans, date rates, and package plans</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'rate-plans'"
+      (click)="activeTab.set('rate-plans')">
+      💰 Rate Plans
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'date-rates'"
+      (click)="activeTab.set('date-rates')">
+      📅 Date Rates
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'packages'"
+      (click)="activeTab.set('packages')">
+      📦 Package Plans
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'rate-restrictions'"
+      (click)="activeTab.set('rate-restrictions')">
+      🚫 Rate Restrictions
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'package-restrictions'"
+      (click)="activeTab.set('package-restrictions')">
+      ⛔ Package Restrictions
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'room-types'"
+      (click)="activeTab.set('room-types')">
+      🏠 Room Types
+    </button>
+  </div>
+
+  <!-- Rate Plans Tab -->
+  @if (activeTab() === 'rate-plans') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Rate Plans</h3>
+        <button class="btn-primary" (click)="openRatePlanForm()">
+          ➕ Create Rate Plan
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Room Type</th>
+              <th>Base Rate</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (plan of ratePlans(); track plan.id) {
+              <tr>
+                <td>{{ plan.id }}</td>
+                <td>{{ plan.name }}</td>
+                <td class="room-types-cell">
+                  @for (roomType of plan.roomTypes; track roomType) {
+                    <span class="room-type-badge">{{ roomType }}</span>
+                  }
+                </td>
+                <td class="amount">{{ format.formatCurrency(plan.baseRate) }}</td>
+                <td>
+                  <span class="status-badge" [class.active]="plan.isActive" [class.inactive]="!plan.isActive">
+                    {{ plan.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button class="btn-icon btn-edit" (click)="openRatePlanForm(plan)" title="Edit">✏️</button>
+                  <button class="btn-icon btn-delete" (click)="deleteRatePlan(plan.id)" title="Delete">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-state">No rate plans found. Create one to get started.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Date Rates Tab -->
+  @if (activeTab() === 'date-rates') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Date-Specific Rates</h3>
+        <button class="btn-primary" (click)="openDateRateForm()">
+          ➕ Add Date Rate
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Rate Plan</th>
+              <th>Room Types</th>
+              <th>Date</th>
+              <th>Rate</th>
+              <th>Special</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (dateRate of dateRates(); track dateRate.id) {
+              <tr>
+                <td>{{ dateRate.id }}</td>
+                <td>{{ getRatePlanName(dateRate.ratePlanId) }}</td>
+                <td class="room-types-cell">
+                  @for (roomType of dateRate.roomTypes; track roomType) {
+                    <span class="room-type-badge">{{ roomType }}</span>
+                  }
+                </td>
+                <td>{{ dateRate.date }}</td>
+                <td class="amount">{{ format.formatCurrency(dateRate.rate) }}</td>
+                <td>
+                  <span class="badge" [class.special]="dateRate.isSpecialRate">
+                    {{ dateRate.isSpecialRate ? '⭐ Yes' : 'No' }}
+                  </span>
+                </td>
+                <td>{{ dateRate.notes || '-' }}</td>
+                <td class="actions">
+                  <button class="btn-icon btn-edit" (click)="openDateRateForm(dateRate)" title="Edit">✏️</button>
+                  <button class="btn-icon btn-delete" (click)="deleteDateRate(dateRate.id)" title="Delete">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-state">No date rates found. Add rates for specific dates.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Package Plans Tab -->
+  @if (activeTab() === 'packages') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Package Plans</h3>
+        <button class="btn-primary" (click)="openPackageForm()">
+          ➕ Create Package
+        </button>
+      </div>
+
+      <div class="packages-grid">
+        @for (pkg of packagePlans(); track pkg.id) {
+          <div class="package-card" [class.inactive]="!pkg.isActive">
+            <div class="package-header">
+              <h4>{{ pkg.name }}</h4>
+              <span class="status-badge" [class.active]="pkg.isActive" [class.inactive]="!pkg.isActive">
+                {{ pkg.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <p class="package-description">{{ pkg.description }}</p>
+            <div class="package-details">
+              <div class="detail-item">
+                <span class="label">Nights:</span>
+                <span class="value">{{ pkg.nights }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Price:</span>
+                <span class="value amount">{{ format.formatCurrency(pkg.totalPrice) }}</span>
+              </div>
+              @if (pkg.discountPercent > 0) {
+                <div class="detail-item">
+                  <span class="label">Discount:</span>
+                  <span class="value discount">{{ pkg.discountPercent }}% OFF</span>
+                </div>
+              }
+              <div class="detail-item">
+                <span class="label">Valid:</span>
+                <span class="value">{{ pkg.validFrom }} to {{ pkg.validTo }}</span>
+              </div>
+            </div>
+            @if (pkg.inclusions.length > 0) {
+              <div class="package-inclusions">
+                <strong>Inclusions:</strong>
+                <ul>
+                  @for (inclusion of pkg.inclusions; track $index) {
+                    <li>{{ inclusion }}</li>
+                  }
+                </ul>
+              </div>
+            }
+            <div class="package-actions">
+              <button class="btn-icon btn-edit" (click)="openPackageForm(pkg)">✏️ Edit</button>
+              <button class="btn-icon btn-delete" (click)="deletePackage(pkg.id)">🗑️ Delete</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">No package plans found. Create one to get started.</div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Rate Plan Restrictions Tab -->
+  @if (activeTab() === 'rate-restrictions') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Rate Plan Restrictions</h3>
+        <button class="btn-primary" (click)="openRatePlanRestrictionForm()">
+          ➕ Add Restriction
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Rate Plan</th>
+              <th>Type</th>
+              <th>Date Range</th>
+              <th>Details</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (restriction of ratePlanRestrictions(); track restriction.id) {
+              <tr>
+                <td>{{ restriction.id }}</td>
+                <td>{{ getRatePlanName(restriction.ratePlanId) }}</td>
+                <td class="capitalize">{{ restriction.restrictionType.replace('-', ' ') }}</td>
+                <td>{{ restriction.startDate }} to {{ restriction.endDate }}</td>
+                <td>
+                  @if (restriction.restrictionType === 'min-stay') {
+                    <span>Min: {{ restriction.minStayNights }} nights</span>
+                  }
+                  @if (restriction.restrictionType === 'max-stay') {
+                    <span>Max: {{ restriction.maxStayNights }} nights</span>
+                  }
+                  @if (restriction.daysOfWeek && restriction.daysOfWeek.length > 0) {
+                    <span>Days: {{ restriction.daysOfWeek.join(', ') }}</span>
+                  }
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="restriction.isActive" [class.inactive]="!restriction.isActive">
+                    {{ restriction.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button class="btn-icon btn-edit" (click)="openRatePlanRestrictionForm(restriction)" title="Edit">✏️</button>
+                  <button class="btn-icon btn-delete" (click)="deleteRatePlanRestriction(restriction.id)" title="Delete">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-state">No restrictions found. Add restrictions to control rate availability.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Package Restrictions Tab -->
+  @if (activeTab() === 'package-restrictions') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Package Restrictions</h3>
+        <button class="btn-primary" (click)="openPackageRestrictionForm()">
+          ➕ Add Restriction
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Package Plan</th>
+              <th>Type</th>
+              <th>Date Range</th>
+              <th>Details</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (restriction of packageRestrictions(); track restriction.id) {
+              <tr>
+                <td>{{ restriction.id }}</td>
+                <td>{{ getPackageName(restriction.packagePlanId) }}</td>
+                <td class="capitalize">{{ restriction.restrictionType.replace('-', ' ') }}</td>
+                <td>{{ restriction.startDate }} to {{ restriction.endDate }}</td>
+                <td>
+                  @if (restriction.restrictionType === 'min-advance') {
+                    <span>Min: {{ restriction.minAdvanceDays }} days</span>
+                  }
+                  @if (restriction.restrictionType === 'max-advance') {
+                    <span>Max: {{ restriction.maxAdvanceDays }} days</span>
+                  }
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="restriction.isActive" [class.inactive]="!restriction.isActive">
+                    {{ restriction.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button class="btn-icon btn-edit" (click)="openPackageRestrictionForm(restriction)" title="Edit">✏️</button>
+                  <button class="btn-icon btn-delete" (click)="deletePackageRestriction(restriction.id)" title="Delete">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-state">No restrictions found. Add restrictions to control package availability.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Rate Plan Form Modal -->
+  @if (showRatePlanForm()) {
+    <div class="modal-overlay" (click)="showRatePlanForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingRatePlan() ? 'Edit Rate Plan' : 'Create Rate Plan' }}</h2>
+          <button class="btn-close" (click)="showRatePlanForm.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveRatePlan()">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" [(ngModel)]="ratePlanName" name="name" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea [(ngModel)]="ratePlanDescription" name="description" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Room Types * (Select one or more)</label>
+              <div class="checkbox-group-inline">
+                @for (type of roomTypes(); track type) {
+                  <label class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isRoomTypeSelected(type)"
+                      (change)="toggleRoomType(type)">
+                    <span class="capitalize">{{ type }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Base Rate * ({{ format.getCurrencySymbol() }})</label>
+              <input type="number" [(ngModel)]="ratePlanBaseRate" name="baseRate" step="0.01" min="0" required class="form-control">
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="ratePlanActive" name="active">
+                Active
+              </label>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showRatePlanForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingRatePlan() ? 'Update' : 'Create' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Date Rate Form Modal -->
+  @if (showDateRateForm()) {
+    <div class="modal-overlay" (click)="showDateRateForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingDateRate() ? 'Edit Date Rate' : 'Add Date Rate' }}</h2>
+          <button class="btn-close" (click)="showDateRateForm.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveDateRate()">
+            <div class="form-group">
+              <label>Rate Plan *</label>
+              <select [(ngModel)]="dateRateRatePlanId" name="ratePlanId" required class="form-control">
+                <option value="">Select Rate Plan</option>
+                @for (plan of ratePlans(); track plan.id) {
+                  <option [value]="plan.id">{{ plan.name }} ({{ plan.roomTypes.join(', ') }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Room Types * (Select one or more)</label>
+              <div class="checkbox-group-inline">
+                @for (type of roomTypes(); track type) {
+                  <label class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isDateRateRoomTypeSelected(type)"
+                      (change)="toggleDateRateRoomType(type)">
+                    <span class="capitalize">{{ type }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+            @if (!editingDateRate()) {
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Start Date *</label>
+                  <input type="date" [(ngModel)]="dateRateStartDate" name="startDate" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>End Date (Optional - for date range)</label>
+                  <input type="date" [(ngModel)]="dateRateEndDate" name="endDate" class="form-control" [min]="dateRateStartDate()">
+                </div>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" [(ngModel)]="dateRateStartDate" name="startDate" required class="form-control">
+              </div>
+            }
+            <div class="form-group">
+              <label>Rate * ({{ format.getCurrencySymbol() }})</label>
+              <input type="number" [(ngModel)]="dateRateRate" name="rate" step="0.01" min="0" required class="form-control">
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="dateRateSpecial" name="special">
+                Special Rate (Holiday/Event)
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea [(ngModel)]="dateRateNotes" name="notes" rows="2" class="form-control" placeholder="e.g., New Year's Eve, Conference Rate"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showDateRateForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingDateRate() ? 'Update' : 'Add' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Package Form Modal -->
+  @if (showPackageForm()) {
+    <div class="modal-overlay" (click)="showPackageForm.set(false)">
+      <div class="modal-container large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingPackage() ? 'Edit Package Plan' : 'Create Package Plan' }}</h2>
+          <button class="btn-close" (click)="showPackageForm.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="savePackage()">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Package Name *</label>
+                <input type="text" [(ngModel)]="packageName" name="name" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Number of Nights *</label>
+                <input type="number" [(ngModel)]="packageNights" name="nights" min="1" required class="form-control">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea [(ngModel)]="packageDescription" name="description" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Total Price * ({{ format.getCurrencySymbol() }})</label>
+                <input type="number" [(ngModel)]="packageTotalPrice" name="totalPrice" step="0.01" min="0" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Discount (%)</label>
+                <input type="number" [(ngModel)]="packageDiscount" name="discount" min="0" max="100" class="form-control">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Inclusions</label>
+              <div class="inclusions-input">
+                <input type="text" [(ngModel)]="newInclusion" name="newInclusion" placeholder="Add inclusion..." class="form-control">
+                <button type="button" class="btn-add-small" (click)="addInclusion()">Add</button>
+              </div>
+              @if (packageInclusions().length > 0) {
+                <ul class="inclusions-list">
+                  @for (inclusion of packageInclusions(); track $index) {
+                    <li>
+                      {{ inclusion }}
+                      <button type="button" class="btn-remove" (click)="removeInclusion($index)">✕</button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Valid From *</label>
+                <input type="date" [(ngModel)]="packageValidFrom" name="validFrom" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Valid To *</label>
+                <input type="date" [(ngModel)]="packageValidTo" name="validTo" required class="form-control">
+              </div>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="packageActive" name="active">
+                Active
+              </label>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showPackageForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingPackage() ? 'Update' : 'Create' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Rate Plan Restriction Form Modal -->
+  @if (showRatePlanRestrictionForm()) {
+    <div class="modal-overlay" (click)="showRatePlanRestrictionForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingRatePlanRestriction() ? 'Edit Rate Restriction' : 'Add Rate Restriction' }}</h2>
+          <button class="btn-close" (click)="showRatePlanRestrictionForm.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveRatePlanRestriction()">
+            <div class="form-group">
+              <label>Rate Plan *</label>
+              <select [(ngModel)]="restrictionRatePlanId" name="ratePlanId" required class="form-control">
+                <option value="">Select Rate Plan</option>
+                @for (plan of ratePlans(); track plan.id) {
+                  <option [value]="plan.id">{{ plan.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Restriction Type *</label>
+              <select [(ngModel)]="restrictionType" name="restrictionType" required class="form-control">
+                <option value="min-stay">Minimum Stay</option>
+                <option value="max-stay">Maximum Stay</option>
+                <option value="closed-to-arrival">Closed to Arrival</option>
+                <option value="closed-to-departure">Closed to Departure</option>
+                <option value="stop-sell">Stop Sell</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start Date *</label>
+                <input type="date" [(ngModel)]="restrictionStartDate" name="startDate" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>End Date *</label>
+                <input type="date" [(ngModel)]="restrictionEndDate" name="endDate" required class="form-control" [min]="restrictionStartDate()">
+              </div>
+            </div>
+            @if (restrictionType() === 'min-stay') {
+              <div class="form-group">
+                <label>Minimum Stay (Nights) *</label>
+                <input type="number" [(ngModel)]="restrictionMinStay" name="minStay" min="1" required class="form-control">
+              </div>
+            }
+            @if (restrictionType() === 'max-stay') {
+              <div class="form-group">
+                <label>Maximum Stay (Nights) *</label>
+                <input type="number" [(ngModel)]="restrictionMaxStay" name="maxStay" min="1" required class="form-control">
+              </div>
+            }
+            <div class="form-group">
+              <label>Days of Week (Optional)</label>
+              <div class="checkbox-group-inline">
+                @for (day of daysOfWeek; track day) {
+                  <label class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isDayOfWeekSelected(day)"
+                      (change)="toggleDayOfWeek(day)">
+                    <span>{{ day }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea [(ngModel)]="restrictionNotes" name="notes" rows="2" class="form-control" placeholder="Additional notes about this restriction"></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="restrictionActive" name="active">
+                Active Restriction
+              </label>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showRatePlanRestrictionForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingRatePlanRestriction() ? 'Update' : 'Add' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Package Restriction Form Modal -->
+  @if (showPackageRestrictionForm()) {
+    <div class="modal-overlay" (click)="showPackageRestrictionForm.set(false)">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingPackageRestriction() ? 'Edit Package Restriction' : 'Add Package Restriction' }}</h2>
+          <button class="btn-close" (click)="showPackageRestrictionForm.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="savePackageRestriction()">
+            <div class="form-group">
+              <label>Package Plan *</label>
+              <select [(ngModel)]="pkgRestrictionPackageId" name="packageId" required class="form-control">
+                <option value="">Select Package Plan</option>
+                @for (pkg of packagePlans(); track pkg.id) {
+                  <option [value]="pkg.id">{{ pkg.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Restriction Type *</label>
+              <select [(ngModel)]="pkgRestrictionType" name="restrictionType" required class="form-control">
+                <option value="booking-window">Booking Window</option>
+                <option value="blackout-dates">Blackout Dates</option>
+                <option value="min-advance">Minimum Advance Booking</option>
+                <option value="max-advance">Maximum Advance Booking</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start Date *</label>
+                <input type="date" [(ngModel)]="pkgRestrictionStartDate" name="startDate" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>End Date *</label>
+                <input type="date" [(ngModel)]="pkgRestrictionEndDate" name="endDate" required class="form-control" [min]="pkgRestrictionStartDate()">
+              </div>
+            </div>
+            @if (pkgRestrictionType() === 'min-advance') {
+              <div class="form-group">
+                <label>Minimum Advance Days *</label>
+                <input type="number" [(ngModel)]="pkgRestrictionMinAdvance" name="minAdvance" min="0" required class="form-control">
+              </div>
+            }
+            @if (pkgRestrictionType() === 'max-advance') {
+              <div class="form-group">
+                <label>Maximum Advance Days *</label>
+                <input type="number" [(ngModel)]="pkgRestrictionMaxAdvance" name="maxAdvance" min="1" required class="form-control">
+              </div>
+            }
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea [(ngModel)]="pkgRestrictionNotes" name="notes" rows="2" class="form-control" placeholder="Additional notes about this restriction"></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="pkgRestrictionActive" name="active">
+                Active Restriction
+              </label>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showPackageRestrictionForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingPackageRestriction() ? 'Update' : 'Add' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Room Types Tab -->
+  @if (activeTab() === 'room-types') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h3>Room Types</h3>
+        <button class="btn-primary" (click)="openRoomTypeForm()">
+          ➕ Add Room Type
+        </button>
+      </div>
+
+      @if (roomTypes().length === 0) {
+        <div class="empty-state">
+          <p>No room types found. Click "Add Room Type" to create one.</p>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Room Type</th>
+                <th>Display Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (roomType of roomTypes(); track roomType) {
+                <tr>
+                  <td>{{ roomType }}</td>
+                  <td>{{ roomType | titlecase }}</td>
+                  <td>
+                    <button class="btn-edit" (click)="openRoomTypeForm(roomType)" title="Edit">✏️</button>
+                    <button class="btn-delete" (click)="deleteRoomType(roomType)" title="Delete">🗑️</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Room Type Form Modal -->
+    @if (showRoomTypeForm()) {
+      <div class="modal-overlay" (click)="showRoomTypeForm.set(false)">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ editingRoomType() ? 'Edit Room Type' : 'Add Room Type' }}</h3>
+            <button class="modal-close" (click)="showRoomTypeForm.set(false)">✕</button>
+          </div>
+          <form (ngSubmit)="saveRoomType()">
+            <div class="form-group">
+              <label>Room Type Name *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="roomTypeName" 
+                name="roomTypeName" 
+                required 
+                class="form-control"
+                placeholder="e.g., Executive Suite, Family Room"
+                [attr.autofocus]="true">
+              <small style="color: #999; margin-top: 0.25rem; display: block;">
+                Name will be automatically formatted (lowercase with hyphens)
+              </small>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="showRoomTypeForm.set(false)">Cancel</button>
+              <button type="submit" class="btn-primary">{{ editingRoomType() ? 'Update' : 'Add' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Error Popup -->
+<app-error-popup
+  [isOpen]="isErrorPopupOpen"
+  [error]="errorMessage()"
+  (closePopup)="closeErrorPopup()"
+></app-error-popup>
+
+<!-- Confirm Popup -->
+<app-confirm-popup
+  [isOpen]="isConfirmPopupOpen"
+  [message]="confirmMessage()!"
+  (confirmed)="onConfirmed()"
+  (cancelled)="onCancelled()"
+></app-confirm-popup>

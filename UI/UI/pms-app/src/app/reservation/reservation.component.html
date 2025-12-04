@@ -357,78 +357,217 @@
         <h2>🏨 Check-In Guest</h2>
         <button class="btn-close" (click)="closeCheckInPopup()" type="button">✕</button>
       </div>
-      <div class="modal-body">
-        @if (selectedReservationForStatus()) {
-          <div class="guest-details">
-            <h3>{{ selectedReservationForStatus()!.guestName }}</h3>
-            <p><strong>Reservation ID:</strong> {{ selectedReservationForStatus()!.id }}</p>
-            <p><strong>Room Type:</strong> {{ selectedReservationForStatus()!.roomType }}</p>
-            <p><strong>Check-In Date:</strong> {{ selectedReservationForStatus()!.checkInDate }}</p>
-          </div>
-          
-          <div class="form-group">
-            <label for="assignedRoomNumber">Assign Room Number *</label>
-            <input 
-              type="text" 
-              id="assignedRoomNumber" 
-              [(ngModel)]="assignedRoomNumber"
-              placeholder="e.g., 101, 205, Suite-301"
-              required
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="checkInTime">Check-In Time *</label>
-            <input 
-              type="time" 
-              id="checkInTime" 
-              [(ngModel)]="checkInTime"
-              required
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="checkInNotes">Notes (Optional)</label>
-            <textarea 
-              id="checkInNotes" 
-              [(ngModel)]="checkInNotes"
-              rows="3"
-              placeholder="Any special notes or instructions..."
-            ></textarea>
-          </div>
 
-          <div class="form-group signature-section">
-            <label>Guest Signature *</label>
-            <div class="signature-container">
-              <canvas 
-                #signatureCanvas
-                class="signature-canvas"
-                (mousedown)="startDrawing($event)"
-                (mousemove)="draw($event)"
-                (mouseup)="stopDrawing()"
-                (mouseleave)="stopDrawing()"
-                (touchstart)="startDrawing($event); $event.preventDefault()"
-                (touchmove)="draw($event); $event.preventDefault()"
-                (touchend)="stopDrawing()"
-              ></canvas>
-              <button type="button" class="btn-clear-signature" (click)="clearSignature()">
-                🗑️ Clear
-              </button>
+      @if (selectedReservationForStatus()) {
+        <div class="guest-details-header">
+          <h3>{{ selectedReservationForStatus()!.guestName }}</h3>
+          <p><strong>Reservation ID:</strong> {{ selectedReservationForStatus()!.id }}</p>
+          <p><strong>Room Type:</strong> {{ selectedReservationForStatus()!.roomType }}</p>
+          <p><strong>Check-In Date:</strong> {{ selectedReservationForStatus()!.checkInDate }}</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <button 
+            type="button"
+            class="tab-button"
+            [class.active]="activeCheckInTab() === 'room'"
+            (click)="activeCheckInTab.set('room')"
+          >
+            🏠 Room Assignment & Payment
+          </button>
+          <button 
+            type="button"
+            class="tab-button"
+            [class.active]="activeCheckInTab() === 'signature'"
+            (click)="activeCheckInTab.set('signature')"
+          >
+            ✍️ Signature Capture
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Tab 1: Room Assignment & Payment -->
+          @if (activeCheckInTab() === 'room') {
+            <div class="tab-content">
+              <div class="form-group">
+                <label for="assignedRoomNumber">Assign Room Number *</label>
+                <input 
+                  type="text" 
+                  id="assignedRoomNumber" 
+                  [(ngModel)]="assignedRoomNumber"
+                  placeholder="e.g., 101, 205, Suite-301"
+                  required
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="checkInTime">Check-In Time *</label>
+                <input 
+                  type="time" 
+                  id="checkInTime" 
+                  [(ngModel)]="checkInTime"
+                  required
+                />
+              </div>
+
+              <div class="payment-section">
+                <h4>💳 Payment Information</h4>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="depositAmount">Deposit Amount *</label>
+                    <input 
+                      type="number" 
+                      id="depositAmount" 
+                      [(ngModel)]="depositAmount"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="paymentMethod">Payment Method *</label>
+                    <select 
+                      id="paymentMethod" 
+                      [(ngModel)]="paymentMethod"
+                      required
+                    >
+                      <option value="">Select method</option>
+                      <option value="cash">Cash</option>
+                      <option value="credit-card">Credit Card</option>
+                      <option value="debit-card">Debit Card</option>
+                      <option value="bank-transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                </div>
+
+                @if (paymentMethod() === 'credit-card' || paymentMethod() === 'debit-card') {
+                  <div class="card-auth-section">
+                    <h5>🔒 Card Authorization</h5>
+                    
+                    <div class="form-group">
+                      <label for="cardNumber">Card Number *</label>
+                      <input 
+                        type="text" 
+                        id="cardNumber" 
+                        [(ngModel)]="cardNumber"
+                        placeholder="1234 5678 9012 3456"
+                        maxlength="19"
+                        (input)="formatCardNumber($event)"
+                        required
+                      />
+                      @if (cardNumber() && !isValidCardNumber()) {
+                        <small class="error">Invalid card number</small>
+                      }
+                    </div>
+
+                    <div class="form-group">
+                      <label for="cardholderName">Cardholder Name *</label>
+                      <input 
+                        type="text" 
+                        id="cardholderName" 
+                        [(ngModel)]="cardholderName"
+                        placeholder="Name as on card"
+                        required
+                      />
+                    </div>
+                    
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="cardExpiry">Expiry Date (MM/YY) *</label>
+                        <input 
+                          type="text" 
+                          id="cardExpiry" 
+                          [(ngModel)]="cardExpiry"
+                          placeholder="MM/YY"
+                          maxlength="5"
+                          (input)="formatCardExpiry($event)"
+                          required
+                        />
+                        @if (cardExpiry() && !isValidExpiry()) {
+                          <small class="error">Invalid or expired date</small>
+                        }
+                      </div>
+                      
+                      <div class="form-group">
+                        <label for="cardCVV">CVV *</label>
+                        <input 
+                          type="password" 
+                          id="cardCVV" 
+                          [(ngModel)]="cardCVV"
+                          placeholder="123"
+                          maxlength="4"
+                          (input)="formatCVV($event)"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    @if (cardAuthSuccess()) {
+                      <div class="auth-success">
+                        ✓ Card authorized successfully
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              
+              <div class="form-group">
+                <label for="checkInNotes">Notes (Optional)</label>
+                <textarea 
+                  id="checkInNotes" 
+                  [(ngModel)]="checkInNotes"
+                  rows="3"
+                  placeholder="Any special notes or instructions..."
+                ></textarea>
+              </div>
             </div>
-            @if (guestSignature()) {
-              <p class="signature-status">✓ Signature captured</p>
-            }
-          </div>
-        }
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="closeCheckInPopup()">
-          Cancel
-        </button>
-        <button type="button" class="btn-primary" (click)="confirmCheckIn()">
-          ✓ Confirm Check-In
-        </button>
-      </div>
+          }
+
+          <!-- Tab 2: Signature Capture -->
+          @if (activeCheckInTab() === 'signature') {
+            <div class="tab-content">
+              <div class="form-group signature-section">
+                <label>Guest Signature *</label>
+                <p class="help-text">Please sign using your mouse, touchpad, or finger on touch screen</p>
+                <div class="signature-container">
+                  <canvas 
+                    #signatureCanvas
+                    class="signature-canvas"
+                    (mousedown)="startDrawing($event)"
+                    (mousemove)="draw($event)"
+                    (mouseup)="stopDrawing()"
+                    (mouseleave)="stopDrawing()"
+                    (touchstart)="startDrawing($event); $event.preventDefault()"
+                    (touchmove)="draw($event); $event.preventDefault()"
+                    (touchend)="stopDrawing()"
+                  ></canvas>
+                  <button type="button" class="btn-clear-signature" (click)="clearSignature()">
+                    🗑️ Clear
+                  </button>
+                </div>
+                @if (guestSignature()) {
+                  <p class="signature-status">✓ Signature captured successfully</p>
+                } @else {
+                  <small class="error">Signature is required to complete check-in</small>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeCheckInPopup()">
+            Cancel
+          </button>
+          <button type="button" class="btn-primary" (click)="confirmCheckIn()">
+            ✓ Confirm Check-In
+          </button>
+        </div>
+      }
     </div>
   </div>
 }

@@ -129,20 +129,20 @@
                   </td>
                   <td class="amount-col charges">
                     @if (transaction.charges > 0) {
-                      {{ transaction.charges | currency:'USD':'symbol':'1.2-2' }}
+                      {{ format.formatCurrency(transaction.charges) }}
                     } @else {
                       -
                     }
                   </td>
                   <td class="amount-col payments">
                     @if (transaction.payments > 0) {
-                      {{ transaction.payments | currency:'USD':'symbol':'1.2-2' }}
+                      {{ format.formatCurrency(transaction.payments) }}
                     } @else {
                       -
                     }
                   </td>
                   <td class="amount-col balance">
-                    {{ transaction.balance | currency:'USD':'symbol':'1.2-2' }}
+                    {{ format.formatCurrency(transaction.balance) }}
                   </td>
                 </tr>
               }
@@ -155,17 +155,17 @@
           <div class="summary-content">
             <div class="summary-row">
               <span class="summary-label">Total Room & Charges:</span>
-              <span class="summary-value charges-value">{{ totalCharges() | currency:'USD':'symbol':'1.2-2' }}</span>
+              <span class="summary-value charges-value">{{ format.formatCurrency(totalCharges()) }}</span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Total Payments:</span>
-              <span class="summary-value payments-value">{{ totalPayments() | currency:'USD':'symbol':'1.2-2' }}</span>
+              <span class="summary-value payments-value">{{ format.formatCurrency(totalPayments()) }}</span>
             </div>
             <div class="summary-divider"></div>
             <div class="summary-row total-row">
               <span class="summary-label">AMOUNT DUE:</span>
               <span class="summary-value total-value" [class.negative]="balanceDue() < 0" [class.positive]="balanceDue() > 0">
-                {{ balanceDue() | currency:'USD':'symbol':'1.2-2' }}
+                {{ format.formatCurrency(balanceDue()) }}
               </span>
             </div>
             @if (balanceDue() < 0) {

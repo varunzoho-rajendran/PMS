@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { StorageService, Reservation, Guest } from '../services/storage.service';
 import { CurrencyInputDirective } from '../directives/currency-input.directive';
 import { LocalizationService } from '../services/localization.service';
+import { FormatService } from '../services/format.service';
 import { ErrorPopupComponent, ErrorMessage } from '../error-popup/error-popup.component';
 import { ConfirmPopupComponent, ConfirmMessage } from '../confirm-popup/confirm-popup.component';
 import { debounceTime, switchMap, of, Subject, takeUntil, forkJoin } from 'rxjs';
@@ -32,6 +33,7 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public i18n = inject(LocalizationService);
+  public format = inject(FormatService);
   private destroy$ = new Subject<void>();
 
   @ViewChild('reservationForm') reservationForm!: NgForm;
@@ -130,13 +132,21 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Guest search functionality
   guests = signal<Guest[]>([]);
-  searchQuery = ''; // Changed from signal to regular property for ngModel binding
+  private _searchQuery = signal('');
   showGuestDropdown = signal(false);
   selectedGuest = signal<Guest | null>(null);
 
+  // Getter and setter for ngModel binding
+  get searchQuery(): string {
+    return this._searchQuery();
+  }
+  set searchQuery(value: string) {
+    this._searchQuery.set(value);
+  }
+
   // Filtered guests based on search query
   filteredGuests = computed(() => {
-    const query = this.searchQuery.toLowerCase();
+    const query = this._searchQuery().toLowerCase();
     if (!query) return this.guests();
     return this.guests().filter(guest => {
       const fullName = `${guest.firstName} ${guest.lastName}`.toLowerCase();
@@ -180,6 +190,16 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
   checkOutTime = signal('');
   checkOutNotes = signal('');
   additionalCharges = signal(0);
+  
+  // Payment-related signals
+  activeCheckInTab = signal<'room' | 'signature'>('room');
+  depositAmount = signal(0);
+  paymentMethod = signal('');
+  cardNumber = signal('');
+  cardholderName = signal('');
+  cardExpiry = signal('');
+  cardCVV = signal('');
+  cardAuthSuccess = signal(false);
   
   // Computed filtered list
   filteredReservationList = computed(() => {
@@ -242,7 +262,7 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectGuest(guest: Guest) {
     this.selectedGuest.set(guest);
-    this.searchQuery = `${guest.firstName} ${guest.lastName}`;
+    this._searchQuery.set(`${guest.firstName} ${guest.lastName}`);
     this.showGuestDropdown.set(false);
     
     // Auto-fill reservation form with guest data
@@ -256,7 +276,7 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   clearGuestSelection() {
     this.selectedGuest.set(null);
-    this.searchQuery = '';
+    this._searchQuery.set('');
     this.reservation.set({
       ...this.reservation(),
       guestName: '',
@@ -388,13 +408,70 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
     // Validate room number
     if (!this.assignedRoomNumber().trim()) {
       this.showError('Validation Error', 'Please assign a room number', 'warning');
+      this.activeCheckInTab.set('room');
       return;
+    }
+
+    // Validate deposit amount
+    if (!this.depositAmount() || this.depositAmount() <= 0) {
+      this.showError('Validation Error', 'Please enter a valid deposit amount', 'warning');
+      this.activeCheckInTab.set('room');
+      return;
+    }
+
+    // Validate payment method
+    if (!this.paymentMethod()) {
+      this.showError('Validation Error', 'Please select a payment method', 'warning');
+      this.activeCheckInTab.set('room');
+      return;
+    }
+
+    // Validate card details if payment method is card
+    if (this.paymentMethod() === 'credit-card' || this.paymentMethod() === 'debit-card') {
+      if (!this.cardNumber() || !this.isValidCardNumber()) {
+        this.showError('Validation Error', 'Please enter a valid card number', 'warning');
+        this.activeCheckInTab.set('room');
+        return;
+      }
+
+      if (!this.cardholderName().trim()) {
+        this.showError('Validation Error', 'Please enter cardholder name', 'warning');
+        this.activeCheckInTab.set('room');
+        return;
+      }
+
+      if (!this.cardExpiry() || !this.isValidExpiry()) {
+        this.showError('Validation Error', 'Card has expired or expiry date is invalid', 'warning');
+        this.activeCheckInTab.set('room');
+        return;
+      }
+
+      if (!this.cardCVV() || this.cardCVV().length < 3) {
+        this.showError('Validation Error', 'Please enter a valid CVV', 'warning');
+        this.activeCheckInTab.set('room');
+        return;
+      }
     }
 
     // Validate signature
     if (!this.guestSignature()) {
       this.showError('Validation Error', 'Please capture guest signature', 'warning');
+      this.activeCheckInTab.set('signature');
       return;
+    }
+
+    // Prepare payment data
+    const paymentData: any = {
+      depositAmount: this.depositAmount(),
+      paymentMethod: this.paymentMethod()
+    };
+
+    if (this.paymentMethod() === 'credit-card' || this.paymentMethod() === 'debit-card') {
+      paymentData.cardLastFour = this.cardNumber().replace(/\s/g, '').slice(-4);
+      paymentData.cardholderName = this.cardholderName();
+      paymentData.cardExpiry = this.cardExpiry();
+      paymentData.authorizationCode = 'AUTH-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      paymentData.authorizationDate = new Date().toISOString();
     }
 
     const updatedReservation = { 
@@ -403,12 +480,42 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
       checkInTime: this.checkInTime(),
       checkInNotes: this.checkInNotes(),
       assignedRoomNumber: this.assignedRoomNumber(),
-      guestSignature: this.guestSignature()
+      guestSignature: this.guestSignature(),
+      paymentData: paymentData
     };
     this.storageService.saveReservation(updatedReservation);
+
+    // Post deposit payment to payments module
+    const currentUser = JSON.parse(localStorage.getItem('pms_current_user') || '{}');
+    const depositPayment = {
+      id: this.storageService.generatePaymentId(),
+      reservationId: reservation.id,
+      guestId: '', // Will be populated if guest exists
+      guestName: reservation.guestName,
+      amount: this.depositAmount(),
+      paymentMethod: this.paymentMethod() as 'cash' | 'credit-card' | 'debit-card' | 'upi' | 'bank-transfer',
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentTime: new Date().toLocaleTimeString(),
+      status: 'completed' as const,
+      transactionId: paymentData.authorizationCode || undefined,
+      notes: `Check-in deposit for Room ${this.assignedRoomNumber()}. ${this.checkInNotes() || ''}`.trim(),
+      processedBy: currentUser.username || 'admin',
+      paymentType: 'deposit' as const
+    };
+    this.storageService.savePayment(depositPayment);
+
     this.loadReservations();
     this.closeCheckInPopup();
-    this.showError('Check-In Successful', `${reservation.guestName} has been checked in to Room ${this.assignedRoomNumber()}.`, 'success');
+    
+    let successMessage = `${reservation.guestName} has been checked in to Room ${this.assignedRoomNumber()}.\n`;
+    successMessage += `Deposit: $${this.depositAmount().toFixed(2)} (${this.paymentMethod()})\n`;
+    successMessage += `Payment ID: ${depositPayment.id}`;
+    
+    if (paymentData.authorizationCode) {
+      successMessage += `\nAuth Code: ${paymentData.authorizationCode}`;
+    }
+    
+    this.showError('Check-In Successful', successMessage, 'success');
   }
 
   closeCheckInPopup() {
@@ -418,6 +525,14 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
     this.checkInNotes.set('');
     this.assignedRoomNumber.set('');
     this.guestSignature.set('');
+    this.depositAmount.set(0);
+    this.paymentMethod.set('');
+    this.cardNumber.set('');
+    this.cardholderName.set('');
+    this.cardExpiry.set('');
+    this.cardCVV.set('');
+    this.cardAuthSuccess.set(false);
+    this.activeCheckInTab.set('room');
     this.clearSignature();
   }
 
@@ -590,5 +705,79 @@ export class ReservationComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.guestSignature.set('');
+  }
+
+  // Payment validation and formatting methods
+  formatCardNumber(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    this.cardNumber.set(formattedValue);
+    
+    // Auto-authorize card if valid
+    if (this.isValidCardNumber()) {
+      this.cardAuthSuccess.set(true);
+    } else {
+      this.cardAuthSuccess.set(false);
+    }
+  }
+
+  formatCardExpiry(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    
+    this.cardExpiry.set(value);
+  }
+
+  formatCVV(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    this.cardCVV.set(value.slice(0, 4));
+  }
+
+  isValidCardNumber(): boolean {
+    const cardNum = this.cardNumber().replace(/\s/g, '');
+    if (!/^\d{13,19}$/.test(cardNum)) return false;
+    
+    // Luhn algorithm
+    let sum = 0;
+    let isEven = false;
+    
+    for (let i = cardNum.length - 1; i >= 0; i--) {
+      let digit = parseInt(cardNum[i]);
+      
+      if (isEven) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+      
+      sum += digit;
+      isEven = !isEven;
+    }
+    
+    return sum % 10 === 0;
+  }
+
+  isValidExpiry(): boolean {
+    const expiry = this.cardExpiry();
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) return false;
+    
+    const [month, year] = expiry.split('/').map(Number);
+    if (month < 1 || month > 12) return false;
+    
+    const now = new Date();
+    const currentYear = now.getFullYear() % 100;
+    const currentMonth = now.getMonth() + 1;
+    
+    if (year < currentYear) return false;
+    if (year === currentYear && month < currentMonth) return false;
+    
+    return true;
   }
 }

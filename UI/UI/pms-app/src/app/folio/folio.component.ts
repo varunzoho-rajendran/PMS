@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { StorageService, Reservation, Guest } from '../services/storage.service';
 import { LocalizationService } from '../services/localization.service';
+import { FormatService } from '../services/format.service';
 import { forkJoin, of } from 'rxjs';
 
 interface Charge {
@@ -58,6 +59,7 @@ export class FolioComponent implements OnInit, AfterViewInit {
   private storageService = inject(StorageService);
   private route = inject(ActivatedRoute);
   public i18n = inject(LocalizationService);
+  public format = inject(FormatService);
 
   @ViewChild('guestSearch') guestSearch!: ElementRef<HTMLInputElement>;
   @ViewChild('folioStatement') folioStatement!: ElementRef<HTMLDivElement>;

@@ -151,6 +151,70 @@
   cursor: not-allowed;
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-azure {
+  width: 100%;
+  padding: 1rem;
+  background: white;
+  color: #5E5E5E;
+  border: 2px solid #8C8C8C;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.btn-azure:hover:not(:disabled) {
+  background: #f3f2f1;
+  border-color: #8C8C8C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-azure:active:not(:disabled) {
+  transform: translateY(0);
+  background: #edebe9;
+}
+
+.btn-azure:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.microsoft-logo {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
 .spinner {
   animation: spin 1s linear infinite;
 }

@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { StorageService, Reservation, Guest } from '../services/storage.service';
 import { WeatherService, WeatherData } from '../services/weather.service';
 import { LocalizationService } from '../services/localization.service';
+import { FormatService } from '../services/format.service';
 import { CustomerPopupComponent } from '../customer-popup/customer-popup.component';
 import { ErrorPopupComponent, ErrorMessage } from '../error-popup/error-popup.component';
 import { ConfirmPopupComponent, ConfirmMessage } from '../confirm-popup/confirm-popup.component';
@@ -20,6 +21,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   private storageService = inject(StorageService);
   weatherService = inject(WeatherService);
   public i18n = inject(LocalizationService);
+  public format = inject(FormatService);
 
   // Error popup
   isErrorPopupOpen = signal(false);

@@ -77,6 +77,16 @@
         </a>
         
         <a 
+          [routerLink]="authService.hasAccess('property') ? '/settings' : null" 
+          [class.disabled]="!authService.hasAccess('property')"
+          [attr.title]="!authService.hasAccess('property') ? i18n.t('navigation.noAccess') : ''"
+          routerLinkActive="active"
+          class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </a>
+        
+        <a 
           [routerLink]="authService.hasAccess('users') ? '/users' : null" 
           [class.disabled]="!authService.hasAccess('users')"
           [attr.title]="!authService.hasAccess('users') ? i18n.t('navigation.noAccess') : ''"
