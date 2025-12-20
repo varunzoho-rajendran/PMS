@@ -5,6 +5,7 @@ import { StorageService } from './services/storage.service';
 import { AuthService } from './services/auth.service';
 import { WeatherService } from './services/weather.service';
 import { LocalizationService } from './services/localization.service';
+import { SwUpdateService } from './services/sw-update.service';
 import { PropertyInfo } from './property/property.component';
 
 @Component({
@@ -20,6 +21,7 @@ export class App implements OnInit, OnDestroy {
   public i18n = inject(LocalizationService);
   private router = inject(Router);
   private weatherService = inject(WeatherService);
+  private swUpdateService = inject(SwUpdateService);
   propertyInfo = signal<PropertyInfo | null>(null);
   
   // Date and time
@@ -35,6 +37,9 @@ export class App implements OnInit, OnDestroy {
     this.loadPropertyInfo();
     this.updateDateTime();
     this.timeInterval = setInterval(() => this.updateDateTime(), 1000);
+    
+    // Initialize service worker update checking
+    this.swUpdateService.init();
   }
   
   ngOnDestroy() {

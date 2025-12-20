@@ -19,8 +19,8 @@ import { Configuration, PopupRequest } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
-    clientId: 'YOUR_CLIENT_ID_HERE', // Replace with your Azure AD Application (client) ID
-    authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID_HERE', // Replace with your Tenant ID
+    clientId: '5f6f5a1b-1d64-49ab-ad33-07b15994bb69', // Replace with your Azure AD Application (client) ID
+    authority: 'https://login.microsoftonline.com/6dc863ef-2b42-4a1b-848e-7dec16aebf96', // Replace with your Tenant ID
     redirectUri: 'http://localhost:4200', // Change to your production URL when deploying
     postLogoutRedirectUri: 'http://localhost:4200/login'
   },

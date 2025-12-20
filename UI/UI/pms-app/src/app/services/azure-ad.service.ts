@@ -169,8 +169,8 @@ export class AzureAdService {
       firstName: firstName,
       lastName: lastName,
       phone: '',
-      role: 'staff', // Default role, can be customized based on Azure AD groups
-      accessLevel: ['reservations', 'guests'], // Default access, customize as needed
+      role: 'admin', // Give Azure AD users admin role for full access
+      accessLevel: ['reservations', 'guests', 'property', 'users', 'reports', 'billing'], // Full access to all modules
       status: 'active',
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()

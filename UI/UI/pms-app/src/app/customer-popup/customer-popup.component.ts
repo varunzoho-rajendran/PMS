@@ -129,8 +129,13 @@ export class CustomerPopupComponent {
   }
 
   close() {
+    this.submitted.set(false);
+    this.errorMessage = '';
     this.closePopup.emit();
-    this.resetForm();
+    // Reset form after a delay to allow the popup to close smoothly
+    setTimeout(() => {
+      this.resetForm();
+    }, 300);
   }
 
   saveCustomer() {
@@ -167,8 +172,12 @@ export class CustomerPopupComponent {
     this.submitted.set(true);
     this.customerSaved.emit(customerData);
     
+    // Close popup after showing success message
     setTimeout(() => {
-      this.close();
+      this.closePopup.emit();
+      setTimeout(() => {
+        this.resetForm();
+      }, 300);
     }, 1000);
   }
 

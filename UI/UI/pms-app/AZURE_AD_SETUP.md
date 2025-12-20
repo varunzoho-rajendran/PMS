@@ -10,7 +10,8 @@ This application now supports Microsoft Azure AD (Entra ID) Single Sign-On in ad
 
 ## Step 1: Register Application in Azure Portal
 
-1. **Navigate to Azure Portal**
+1. **Navigate to Azure Portal**s
+
    - Go to https://portal.azure.com
    - Sign in with your Azure account
 

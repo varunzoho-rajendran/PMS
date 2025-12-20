@@ -141,6 +141,13 @@ export class AuthService {
         createdAt: new Date().toISOString()
       };
       this.storageService.saveUser(user);
+    } else {
+      // Update existing Azure AD user with latest role and access level
+      user.role = azureUser.role;
+      user.accessLevel = azureUser.accessLevel;
+      user.firstName = azureUser.firstName;
+      user.lastName = azureUser.lastName;
+      this.storageService.updateUser(user);
     }
 
     return user;
