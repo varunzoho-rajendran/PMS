@@ -20,6 +20,12 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .btn-add {
   padding: 0.75rem 1.5rem;
   background: #28a745;
@@ -36,6 +42,73 @@
   background: #218838;
 }
 
+.btn-sync {
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-sync:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-sync:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-test {
+  padding: 0.75rem 1.5rem;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-test:hover {
+  background: #138496;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-select-all,
+.btn-deselect {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-select-all:hover {
+  background: #5a6268;
+}
+
+.btn-deselect {
+  background: #dc3545;
+}
+
+.btn-deselect:hover {
+  background: #c82333;
+}
+
 .filters {
   display: flex;
   gap: 1rem;
@@ -44,6 +117,7 @@
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  align-items: center;
 }
 
 .search-box {

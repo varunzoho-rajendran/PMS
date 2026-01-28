@@ -39,10 +39,22 @@ export const loginRequest: PopupRequest = {
 };
 
 /**
+ * Admin scopes for creating users
+ * Requires admin consent in Azure Portal
+ */
+export const adminRequest: PopupRequest = {
+  scopes: [
+    'User.ReadWrite.All',  // Create and manage users
+    'Directory.ReadWrite.All'  // Full directory access
+  ]
+};
+
+/**
  * Graph API endpoint for getting user profile
  */
 export const graphConfig = {
-  graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me'
+  graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
+  graphUsersEndpoint: 'https://graph.microsoft.com/v1.0/users'
 };
 
 /**
@@ -52,5 +64,9 @@ export const protectedResources = {
   graphMe: {
     endpoint: 'https://graph.microsoft.com/v1.0/me',
     scopes: ['User.Read']
+  },
+  graphUsers: {
+    endpoint: 'https://graph.microsoft.com/v1.0/users',
+    scopes: ['User.ReadWrite.All', 'Directory.ReadWrite.All']
   }
 };

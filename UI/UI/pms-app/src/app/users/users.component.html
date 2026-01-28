@@ -1,9 +1,27 @@
 <div class="users-container">
   <div class="users-header">
     <h2>User Management</h2>
-    <button (click)="showAddUser()" class="btn-add">
-      ➕ Add New User
-    </button>
+    <div class="header-actions">
+      <button (click)="showAddUser()" class="btn-add">
+        ➕ Add New User
+      </button>
+      <button (click)="testAzurePermissions()" class="btn-test" title="Test Azure AD Permissions">
+        🔍 Test Permissions
+      </button>
+      @if (selectedUsersForSync().length > 0) {
+        <button 
+          (click)="syncToAzureAD()" 
+          class="btn-sync"
+          [disabled]="isSyncing()"
+        >
+          @if (isSyncing()) {
+            ⏳ Syncing...
+          } @else {
+            ☁️ Sync to Azure AD ({{ selectedUsersForSync().length }})
+          }
+        </button>
+      }
+    </div>
   </div>
 
   <div class="filters">
@@ -24,6 +42,14 @@
         <option value="staff">Staff</option>
       </select>
     </div>
+    @if (getFilteredUsers().length > 0) {
+      <div class="sync-actions">
+        <button (click)="selectAllUsers()" class="btn-select-all">Select All</button>
+        @if (selectedUsersForSync().length > 0) {
+          <button (click)="deselectAllUsers()" class="btn-deselect">Deselect All</button>
+        }
+      </div>
+    }
   </div>
 
   <!-- Users List -->
@@ -43,6 +69,13 @@
           <table class="data-table">
             <thead>
               <tr>
+                <th>
+                  <input 
+                    type="checkbox" 
+                    [checked]="selectedUsersForSync().length === getFilteredUsers().length && getFilteredUsers().length > 0"
+                    (change)="selectedUsersForSync().length === getFilteredUsers().length ? deselectAllUsers() : selectAllUsers()"
+                  />
+                </th>
                 <th>Username</th>
                 <th>Name</th>
                 <th>Email</th>
@@ -54,6 +87,13 @@
             <tbody>
               @for (user of getFilteredUsers(); track user.id) {
                 <tr #userCard [class.selected]="selectedUser()?.id === user.id">
+                  <td>
+                    <input 
+                      type="checkbox"
+                      [checked]="isUserSelected(user.id)"
+                      (change)="toggleUserSelection(user.id)"
+                    />
+                  </td>
                   <td>
                     <strong>{{ user.username }}</strong>
                   </td>

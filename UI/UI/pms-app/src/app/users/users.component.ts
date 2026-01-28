@@ -6,6 +6,7 @@ import { StorageService, User } from '../services/storage.service';
 import { LocalizationService } from '../services/localization.service';
 import { ErrorPopupComponent, ErrorMessage } from '../error-popup/error-popup.component';
 import { ConfirmPopupComponent, ConfirmMessage } from '../confirm-popup/confirm-popup.component';
+import { AzureAdService } from '../services/azure-ad.service';
 import { debounceTime, switchMap, of, Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -19,6 +20,7 @@ export class UsersComponent implements OnInit, AfterViewInit, OnDestroy {
   private storageService = inject(StorageService);
   private router = inject(Router);
   public i18n = inject(LocalizationService);
+  private azureAdService = inject(AzureAdService);
   private destroy$ = new Subject<void>();
 
   // Error popup
@@ -296,6 +298,105 @@ export class UsersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getStatusClass(status: string): string {
     return status === 'active' ? 'status-active' : 'status-inactive';
+  }
+
+  // Azure AD Sync functionality
+  selectedUsersForSync = signal<string[]>([]);
+  isSyncing = signal(false);
+
+  toggleUserSelection(userId: string) {
+    const current = this.selectedUsersForSync();
+    const index = current.indexOf(userId);
+    
+    if (index > -1) {
+      this.selectedUsersForSync.set(current.filter(id => id !== userId));
+    } else {
+      this.selectedUsersForSync.set([...current, userId]);
+    }
+  }
+
+  isUserSelected(userId: string): boolean {
+    return this.selectedUsersForSync().includes(userId);
+  }
+
+  async testAzurePermissions() {
+    try {
+      const token = await this.azureAdService.getAdminAccessToken().toPromise();
+      this.showError(
+        'Permissions Test',
+        'Successfully acquired admin token! You have the required permissions to create users.',
+        'success'
+      );
+    } catch (error: any) {
+      this.showError(
+        'Permissions Test Failed',
+        `Error: ${error.message}\n\nPlease ensure:\n1. Admin consent is granted in Azure Portal\n2. You have User Administrator or Global Admin role\n3. You are signed in with correct account`,
+        'error'
+      );
+    }
+  }
+
+  async syncToAzureAD() {
+    const selectedIds = this.selectedUsersForSync();
+    
+    if (selectedIds.length === 0) {
+      this.showError('No Users Selected', 'Please select at least one user to sync to Azure AD.', 'warning');
+      return;
+    }
+
+    const confirmed = await this.showConfirm(
+      'Sync to Azure AD',
+      `Are you sure you want to create ${selectedIds.length} user(s) in Azure AD? They will receive temporary passwords and must change them on first login.`,
+      'Yes, Sync Now',
+      'Cancel'
+    );
+
+    if (!confirmed) return;
+
+    this.isSyncing.set(true);
+    const usersToSync = this.users().filter(u => selectedIds.includes(u.id));
+    
+    let successCount = 0;
+    let failCount = 0;
+    const results: string[] = [];
+
+    for (const user of usersToSync) {
+      try {
+        const result = await this.azureAdService.createAzureAdUser(user).toPromise();
+        if (result.success) {
+          successCount++;
+          results.push(`✓ ${user.username}: Created (Temp Password: ${result.temporaryPassword})`);
+        } else {
+          failCount++;
+          results.push(`✗ ${user.username}: Failed`);
+        }
+      } catch (error: any) {
+        failCount++;
+        const errorMsg = error.message || 'Unknown error';
+        results.push(`✗ ${user.username}: ${errorMsg}`);
+        console.error(`Failed to create user ${user.username}:`, error);
+      }
+    }
+
+    this.isSyncing.set(false);
+    this.selectedUsersForSync.set([]);
+
+    // Show results
+    const resultMessage = results.join('\n\n');
+    this.showError(
+      'Azure AD Sync Complete',
+      `Success: ${successCount} | Failed: ${failCount}\n\n${resultMessage}`,
+      successCount > 0 ? 'success' : 'error'
+    );
+  }
+
+  selectAllUsers() {
+    const allIds = this.getFilteredUsers().map(u => u.id);
+    this.selectedUsersForSync.set(allIds);
+  }
+
+  deselectAllUsers() {
+    this.selectedUsersForSync.set([]);
   }
 
   // Error popup methods

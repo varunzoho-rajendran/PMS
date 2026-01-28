@@ -79,7 +79,7 @@ export class AuthService {
     const users = this.storageService.getAllUsers();
     const user = users.find(u => 
       u.username === username && 
-      u.password === password && 
+      u.password === password &&    
       u.status === 'active'
     );
 
